@@ -1,26 +1,30 @@
-import { createRouter, createWebHistory }
-from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
-import HomeView from "../views/HomeView.vue";
-import ProductView from "../views/ProductView.vue";
-import ContactView from "../views/ContactView.vue";
+import trangchu from "../views/trangchu.vue";
+import sanpham from "../views/sanpham.vue";
+import lienhe from "../views/lienhe.vue";
+import chitietsanpham from "../views/chitietsanpham.vue";
 
-const routes = [
-  {
-    path: "/",
-    component: HomeView,
-  },
-  {
-    path: "/product/:id",
-    component: ProductView,
-  },
-  {
-    path: "/contact",
-    component: ContactView,
-  },
-];
-
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: [
+    {
+      path: "/",
+      component: trangchu,
+    },
+    {
+      path: "/sanpham",
+      component: sanpham,
+    },
+    {
+      path: "/lienhe",
+      component: lienhe,
+    },
+    {
+      path: "/sanpham/:id",
+      component: chitietsanpham,
+    },
+  ],
 });
+
+export default router;

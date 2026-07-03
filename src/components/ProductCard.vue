@@ -1,17 +1,14 @@
 <template>
   <div class="card">
-    <img
-      :src="product.image"
-      :alt="product.name"
-    />
+    <img :src="product.hinh">
 
-    <h2>{{ product.name }}</h2>
+    <h3>{{ product.ten }}</h3>
 
-    <p>{{ product.price }}</p>
+    <p>
+      {{ product.gia.toLocaleString() }} đ
+    </p>
 
-    <RouterLink
-      :to="'/product/' + product.id"
-    >
+    <RouterLink :to="'/sanpham/' + product.id">
       <button>Xem chi tiết</button>
     </RouterLink>
   </div>
@@ -22,42 +19,33 @@ defineProps({
   product: Object,
 });
 </script>
-
 <style scoped>
 .card {
-  background: white;
-  border-radius: 25px;
-  padding: 30px;
+  background: #111;
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
   text-align: center;
   transition: 0.3s;
 }
 
 .card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
 }
 
-img {
-  width: 250px;
-  height: 250px;
+.card img {
+  width: 100%;
+  height: 220px;
   object-fit: contain;
 }
 
-h2 {
-  margin-top: 20px;
-}
-
-p {
-  margin: 20px 0;
-  font-size: 22px;
-  font-weight: bold;
-}
-
 button {
-  background: black;
-  color: white;
+  background: white;
+  color: black;
   border: none;
-  padding: 15px 25px;
-  border-radius: 30px;
+  padding: 10px 20px;
+  border-radius: 10px;
   cursor: pointer;
+  margin-top: 15px;
 }
 </style>
