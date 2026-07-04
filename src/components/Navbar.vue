@@ -2,19 +2,12 @@
   <nav class="navbar">
     <h2 class="logo">DAT MOBILE</h2>
 
-    <ul>
-      <li>
-        <RouterLink to="/">Trang chủ</RouterLink>
-      </li>
-
-      <li>
-        <RouterLink to="/">Sản phẩm</RouterLink>
-      </li>
-
-      <li>
-        <RouterLink to="/contact">Liên hệ</RouterLink>
-      </li>
-    </ul>
+    <div class="menu">
+      <RouterLink to="/">Trang chủ</RouterLink>
+      <RouterLink to="/sanpham">Sản phẩm</RouterLink>
+      <RouterLink to="/lienhe">Liên hệ</RouterLink>
+      <RouterLink to="/giohang">Giỏ hàng</RouterLink>
+    </div>
   </nav>
 </template>
 
@@ -33,9 +26,8 @@
   font-weight: bold;
 }
 
-ul {
+.menu {
   display: flex;
-  list-style: none;
   gap: 40px;
 }
 

@@ -1,10 +1,11 @@
 <template>
-  <div class="container">
+  <div v-if="sp" class="detail">
 
-    <div v-if="sp">
-
+    <div class="left">
       <img :src="sp.hinh">
+    </div>
 
+    <div class="right">
       <h1>{{ sp.ten }}</h1>
 
       <h2>
@@ -15,8 +16,9 @@
         {{ sp.mota }}
       </p>
 
-      <button>Mua ngay</button>
-
+      <button @click="themGioHang">
+  Thêm vào giỏ hàng
+</button>
     </div>
 
   </div>
@@ -25,45 +27,50 @@
 <script setup>
 import { useRoute } from "vue-router";
 import sanpham from "../data/sanpham";
+import { giohang } from "../stores/giohang";
 
 const route = useRoute();
 
 const sp = sanpham.find(
-  (item) => item.id == route.params.id
+  item => item.id == route.params.id
 );
+
+function themGioHang() {
+  giohang.push(sp);
+  alert("Đã thêm vào giỏ hàng");
+}
 </script>
 
 <style scoped>
-.container {
-  padding: 80px;
-  text-align: center;
+.detail {
+  display: flex;
+  gap: 50px;
+  padding: 50px;
 }
 
-img {
-  width: 350px;
+.left img {
+  width: 400px;
 }
 
-h1 {
-  margin-top: 30px;
+.right {
+  flex: 1;
 }
 
-h2 {
+.right h1 {
+  font-size: 40px;
+}
+
+.right h2 {
+  color: red;
   margin: 20px 0;
 }
 
-p {
-  max-width: 700px;
-  margin: auto;
-  color: #666;
-}
-
 button {
-  margin-top: 30px;
   background: black;
   color: white;
   border: none;
-  padding: 15px 35px;
-  border-radius: 30px;
+  padding: 15px 30px;
+  border-radius: 10px;
   cursor: pointer;
 }
 </style>
