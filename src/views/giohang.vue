@@ -1,57 +1,126 @@
 <template>
-  <div v-if="giohang.length === 0">
-  <h2>Chưa có sản phẩm nào.</h2>
-</div>
+  <div class="container">
+    <h1>Giỏ hàng</h1>
 
-<div v-else>
-  <div
-    class="item"
-    v-for="sp in giohang"
-    :key="sp.id"
-  >
-    <img :src="sp.hinh">
+    <div v-if="giohang.length === 0">
+      <h2>Chưa có sản phẩm nào trong giỏ hàng</h2>
+    </div>
 
-    <div>
-      <h3>{{ sp.ten }}</h3>
-      <p>{{ sp.gia.toLocaleString() }} đ</p>
+    <div v-else>
+      <div
+        class="item"
+        v-for="(sp, index) in giohang"
+        :key="sp.id"
+      >
+        <img :src="sp.hinh" />
+
+        <div class="info">
+          <h3>{{ sp.ten }}</h3>
+
+          <p>
+            Giá:
+            {{ sp.gia.toLocaleString() }} đ
+          </p>
+
+          <div class="soluong">
+            <button @click="giam(index)">
+              -
+            </button>
+
+            <span>
+              {{ sp.soluong || 1 }}
+            </span>
+
+            <button @click="tang(index)">
+              +
+            </button>
+          </div>
+
+          <p>
+            Thành tiền:
+            {{
+              (
+                sp.gia *
+                (sp.soluong || 1)
+              ).toLocaleString()
+            }} đ
+          </p>
+
+          <button
+            class="xoa"
+            @click="xoaSanPham(index)"
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+
+      <h2 class="tongtien">
+        Tổng tiền:
+        {{ tongTien.toLocaleString() }} đ
+      </h2>
+        <RouterLink to="/dathang">
+  <button class="dat">
+    Đặt hàng
+  </button>
+</RouterLink>
     </div>
   </div>
-</div>
+
 </template>
 
 <script setup>
-import { giohang } from "../stores/giohang";
 import { computed } from "vue";
-
+import { giohang } from "../stores/giohang";
+import { RouterLink } from "vue-router";
 const tongTien = computed(() => {
   return giohang.reduce(
-    (tong, sp) => tong + sp.gia,
+    (tong, sp) =>
+      tong +
+      sp.gia *
+      (sp.soluong || 1),
     0
   );
 });
-</script>
 
-CSS đó là CSS của trang giỏ hàng, nên bạn thêm vào file:
+function xoaSanPham(index) {
+  giohang.splice(index, 1);
 
-src/views/giohang.vue
+  localStorage.setItem(
+    "giohang",
+    JSON.stringify(giohang)
+  );
+}
 
-Cấu trúc đầy đủ sẽ như này:
+function tang(index) {
+  if (!giohang[index].soluong) {
+    giohang[index].soluong = 1;
+  }
 
-<template>
-  <!-- HTML giỏ hàng -->
-</template>
+  giohang[index].soluong++;
 
-<script setup>
-import { computed } from "vue";
-import { giohang } from "../stores/giohang";
+  localStorage.setItem(
+    "giohang",
+    JSON.stringify(giohang)
+  );
+}
 
-const tongTien = computed(() => {
-  return giohang.reduce((tong, sp) => tong + sp.gia, 0);
-});
-<h2>
-  Tổng tiền:
-  {{ tongTien.toLocaleString() }} đ
-</h2>
+function giam(index) {
+  if (!giohang[index].soluong) {
+    giohang[index].soluong = 1;
+  }
+
+  if (giohang[index].soluong > 1) {
+    giohang[index].soluong--;
+  } else {
+    giohang.splice(index, 1);
+  }
+
+  localStorage.setItem(
+    "giohang",
+    JSON.stringify(giohang)
+  );
+}
 </script>
 
 <style scoped>
@@ -68,7 +137,7 @@ const tongTien = computed(() => {
   padding: 25px;
   border-radius: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 20px rgba(0,0,0,.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .item img {
@@ -77,8 +146,46 @@ const tongTien = computed(() => {
   object-fit: contain;
 }
 
-h2 {
+.info {
+  flex: 1;
+}
+
+.soluong {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.soluong button {
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 50%;
+  background: black;
+  color: white;
+  cursor: pointer;
+}
+
+.xoa {
+  background: red;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tongtien {
   margin-top: 40px;
-  font-size: 30px;
+}
+.dat {
+  background: black;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 20px;
 }
 </style>

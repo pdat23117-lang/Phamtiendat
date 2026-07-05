@@ -12,6 +12,12 @@
       <button>Xem chi tiết</button>
     </RouterLink>
   </div>
+  <div
+  v-if="product.noibat"
+  class="badge"
+>
+  HOT
+</div>
 </template>
 
 <script setup>
@@ -47,5 +53,16 @@ button {
   border-radius: 10px;
   cursor: pointer;
   margin-top: 15px;
+}
+.badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+
+  background: red;
+  color: white;
+
+  padding: 8px 15px;
+  border-radius: 20px;
 }
 </style>

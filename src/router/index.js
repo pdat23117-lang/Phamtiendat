@@ -5,6 +5,7 @@ import sanpham from "../views/sanpham.vue";
 import lienhe from "../views/lienhe.vue";
 import chitietsanpham from "../views/chitietsanpham.vue";
 import GioHang from "../views/giohang.vue";
+import DatHang from "../views/dathang.vue";
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -27,6 +28,10 @@ const router = createRouter({
     {
   path: "/giohang",
   component: GioHang,
+},
+{
+  path: "/dathang",
+  component: DatHang,
 },
   ],
 });
