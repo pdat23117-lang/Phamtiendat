@@ -9,12 +9,12 @@ const sanpham = [
     mau: "Hồng",
     baohanh: "12 tháng",
     danhgia: 4.7,
-    hinh: "/images/15plus.jpeg",
+    hinh: "images/15plus.jpeg",
     noibat: false,
   },
   {
     id: 2,
-    ten: "iPhone 16",
+    ten: "iPhone 16 Plus",
     gia: 24990000,
     hang: "Apple",
     ram: "8GB",
@@ -22,7 +22,7 @@ const sanpham = [
     mau: "Xanh lưu ly",
     baohanh: "12 tháng",
     danhgia: 4.8,
-    hinh: "/images/16plus.jpg",
+    hinh: "images/16plus.jpg",
     noibat: true,
   },
   {
@@ -35,7 +35,7 @@ const sanpham = [
     mau: "Titan Đen",
     baohanh: "12 tháng",
     danhgia: 4.9,
-    hinh: "/images/16promax.jpg",
+    hinh: "images/16promax.jpg",
     noibat: true,
   },
   {
@@ -48,7 +48,7 @@ const sanpham = [
     mau: "Titan Trắng",
     baohanh: "12 tháng",
     danhgia: 4.9,
-    hinh: "/images/17promax.jpg",
+    hinh: "images/17promax.jpg",
     noibat: true,
   },
   {
@@ -61,7 +61,7 @@ const sanpham = [
     mau: "Titan Tự Nhiên",
     baohanh: "12 tháng",
     danhgia: 5.0,
-    hinh: "/images/18pro.jpg",
+    hinh: "images/18pro.jpg",
     noibat: true,
   },
   {
@@ -74,7 +74,7 @@ const sanpham = [
     mau: "Đen",
     baohanh: "12 tháng",
     danhgia: 4.8,
-    hinh: "/images/s26.jpg",
+    hinh: "images/s26.jpg",
     noibat: true,
   },
   {
@@ -87,7 +87,7 @@ const sanpham = [
     mau: "Xám Titan",
     baohanh: "12 tháng",
     danhgia: 4.8,
-    hinh: "/images/ss25.jpg",
+    hinh: "images/ss25.jpg",
     noibat: true,
   },
   {
@@ -100,7 +100,7 @@ const sanpham = [
     mau: "Trắng",
     baohanh: "12 tháng",
     danhgia: 4.6,
-    hinh: "/images/xiaomi15.jpg",
+    hinh: "images/xiaomi15.jpg",
     noibat: false,
   },
 ];

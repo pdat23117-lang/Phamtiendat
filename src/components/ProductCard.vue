@@ -1,6 +1,16 @@
 <template>
   <div class="card">
-    <img :src="product.hinh">
+    <div
+      v-if="product.noibat"
+      class="badge"
+    >
+      HOT
+    </div>
+
+    <img
+      :src="product.hinh"
+      :alt="product.ten"
+    />
 
     <h3>{{ product.ten }}</h3>
 
@@ -12,12 +22,6 @@
       <button>Xem chi tiết</button>
     </RouterLink>
   </div>
-  <div
-  v-if="product.noibat"
-  class="badge"
->
-  HOT
-</div>
 </template>
 
 <script setup>
@@ -25,8 +29,10 @@ defineProps({
   product: Object,
 });
 </script>
+
 <style scoped>
 .card {
+  position: relative;
   background: #111;
   color: white;
   border-radius: 15px;
@@ -45,6 +51,17 @@ defineProps({
   object-fit: contain;
 }
 
+.badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: red;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
 button {
   background: white;
   color: black;
@@ -53,16 +70,5 @@ button {
   border-radius: 10px;
   cursor: pointer;
   margin-top: 15px;
-}
-.badge {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-
-  background: red;
-  color: white;
-
-  padding: 8px 15px;
-  border-radius: 20px;
 }
 </style>
