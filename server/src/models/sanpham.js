@@ -1,48 +1,105 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema(
   {
-    name: {
+    ten: {
       type: String,
       required: true,
     },
-    price: {
+
+    gia: {
       type: Number,
       required: true,
     },
-    image: {
+
+    hang: {
       type: String,
       required: true,
     },
-    category: {
+
+    hinh: {
       type: String,
       required: true,
     },
-    description: {
+
+    ram: {
       type: String,
-      default: '',
+      default: "",
     },
+
+    bonho: {
+      type: String,
+      default: "",
+    },
+
+    mau: {
+      type: String,
+      default: "",
+    },
+
+    baohanh: {
+      type: String,
+      default: "12 tháng",
+    },
+
+    mota: {
+      type: String,
+      default: "",
+    },
+
     stock: {
       type: Number,
       default: 10,
     },
+
+    noibat: {
+      type: Boolean,
+      default: false,
+    },
+
     reviews: [
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    name: { type: String, required: true },
-    rating: { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, required: true },
-    adminReply: { type: String, default: '' },
-    repliedAt: { type: Date },
-    createdAt: { type: Date, default: Date.now },
-  },
-],
-    averageRating: { type: Number, default: 0 },
-    numReviews: { type: Number, default: 0 },
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+
+        name: String,
+
+        rating: Number,
+
+        comment: String,
+
+        adminReply: {
+          type: String,
+          default: "",
+        },
+
+        repliedAt: Date,
+
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+
+    numReviews: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   }
-)
+);
 
-module.exports = mongoose.model('Product', ProductSchema)
+module.exports = mongoose.model(
+  "Product",
+  ProductSchema
+);

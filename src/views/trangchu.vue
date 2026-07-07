@@ -3,18 +3,91 @@
 
     <Hero />
 
-    <section class="noibat">
+    <section class="section">
 
-      <h1>
-        Sản phẩm nổi bật
-      </h1>
+      <div class="title">
 
-      <div class="products">
+        <h2>Sản phẩm nổi bật</h2>
+
+        <RouterLink
+          to="/sanpham"
+        >
+          Xem tất cả →
+        </RouterLink>
+
+      </div>
+
+      <div
+        v-if="loading"
+        class="loading"
+      >
+        Đang tải...
+      </div>
+
+      <div
+        v-else
+        class="products"
+      >
+
         <ProductCard
-          v-for="sp in sanPhamNoiBat"
-          :key="sp.id"
+          v-for="sp in sanphamNoiBat"
+          :key="sp._id"
           :product="sp"
         />
+
+      </div>
+
+    </section>
+
+    <section class="feature">
+
+      <div class="box">
+
+        🚚
+
+        <h3>Miễn phí vận chuyển</h3>
+
+        <p>
+          Toàn quốc cho đơn từ
+          2 triệu đồng.
+        </p>
+
+      </div>
+
+      <div class="box">
+
+        🛡️
+
+        <h3>Bảo hành chính hãng</h3>
+
+        <p>
+          Cam kết 100% hàng chính hãng.
+        </p>
+
+      </div>
+
+      <div class="box">
+
+        💳
+
+        <h3>Thanh toán linh hoạt</h3>
+
+        <p>
+          COD và chuyển khoản.
+        </p>
+
+      </div>
+
+      <div class="box">
+
+        ☎️
+
+        <h3>Hỗ trợ 24/7</h3>
+
+        <p>
+          Luôn sẵn sàng hỗ trợ khách hàng.
+        </p>
+
       </div>
 
     </section>
@@ -23,68 +96,189 @@
 </template>
 
 <script setup>
-import Hero from "../components/Hero.vue";
-import ProductCard from "../components/ProductCard.vue";
-import sanpham from "../data/sanpham";
 
-const sanPhamNoiBat =
-  sanpham.filter(
-    (sp) => sp.noibat
-  );
+import axios from "axios";
+
+import {
+ref,
+computed,
+onMounted,
+} from "vue";
+
+import Hero from "../components/Hero.vue";
+
+import ProductCard from "../components/ProductCard.vue";
+
+const loading=
+ref(true);
+
+const sanpham=
+ref([]);
+
+const loadData=
+async()=>{
+
+try{
+
+const res=
+await axios.get(
+"http://localhost:5000/api/sanpham"
+);
+
+sanpham.value=
+res.data.products;
+
+}
+catch(err){
+
+console.log(err);
+
+}
+
+loading.value=false;
+
+};
+
+const sanphamNoiBat=
+computed(()=>{
+
+return sanpham.value
+
+.filter(
+i=>i.noibat
+)
+
+.slice(0,8);
+
+});
+
+onMounted(
+loadData
+);
+
 </script>
 
 <style scoped>
-h1 {
-  text-align: center;
-  margin: 60px 0;
+
+.section{
+
+padding:60px;
+
 }
 
-.products {
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fit, minmax(280px, 1fr));
-  gap: 40px;
-  padding: 50px;
-}
-.noibat {
-  padding: 80px;
+.title{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:35px;
+
 }
 
-.noibat h1 {
-  text-align: center;
-  margin-bottom: 50px;
-  font-size: 40px;
+.title h2{
+
+font-size:34px;
+
 }
 
-.products {
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fit,
-      minmax(280px, 1fr));
+.title a{
 
-  gap: 40px;
-}
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-.card {
-  transition: .3s;
+color:#2563eb;
+
+font-weight:bold;
+
 }
 
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow:
-    0 20px 40px
-    rgba(0,0,0,.2);
+.products{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(auto-fill,minmax(260px,1fr));
+
+gap:30px;
+
 }
 
-.card img {
-  transition: .3s;
+.loading{
+
+text-align:center;
+
+padding:80px;
+
+font-size:22px;
+
 }
 
-.card:hover img {
-  transform: scale(1.08);
+.feature{
+
+padding:60px;
+
+display:grid;
+
+grid-template-columns:
+
+repeat(auto-fit,minmax(250px,1fr));
+
+gap:30px;
+
+background:white;
+
+margin-top:40px;
+
 }
+
+.box{
+
+padding:35px;
+
+text-align:center;
+
+border-radius:12px;
+
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+
+font-size:22px;
+
+}
+
+.box h3{
+
+margin:20px 0;
+
+font-size:22px;
+
+}
+
+.box p{
+
+color:#666;
+
+line-height:1.6;
+
+}
+
+@media(max-width:768px){
+
+.section,
+.feature{
+
+padding:20px;
+
+}
+
+.title{
+
+flex-direction:column;
+
+gap:15px;
+
+}
+
+}
+
 </style>

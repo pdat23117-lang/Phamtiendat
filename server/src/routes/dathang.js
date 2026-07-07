@@ -1,5 +1,6 @@
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
+
 const {
   createOrder,
   getMyOrders,
@@ -7,33 +8,54 @@ const {
   getAllOrders,
   updateOrderStatus,
   cancelOrder,
-} = require('../controllers/orderController')
-const { protect } = require('../middleware/auth')
-const { admin } = require('../middleware/admin')
+  getThongKe,
+} = require("../controllers/dathang");
 
-// ===== PUBLIC (cần đăng nhập) =====
+const { protect } = require("../middleware/auth");
+const { admin } = require("../middleware/admin");
 
-// POST /api/orders — Tạo đơn hàng mới
-router.post('/', protect, createOrder)
+// =========================
+// USER
+// =========================
 
-// GET /api/orders/me — Lấy đơn của user hiện tại
-// ⚠️ PHẢI đặt TRƯỚC /:id để không bị match nhầm
-router.get('/me', protect, getMyOrders)
+// Tạo đơn hàng
+router.post("/", protect, createOrder);
 
-// PUT /api/orders/:id/cancel — User tự hủy đơn
-// ⚠️ PHẢI đặt TRƯỚC /:id/status
-router.put('/:id/cancel', protect, cancelOrder)
+// Lấy danh sách đơn của chính mình
+router.get("/my", protect, getMyOrders);
 
-// GET /api/orders/:id — Lấy chi tiết 1 đơn
-router.get('/:id', protect, getOrderById)
+// Hủy đơn hàng
+router.put("/:id/cancel", protect, cancelOrder);
 
-// ===== ADMIN ONLY =====
+// Xem chi tiết đơn hàng
+router.get("/:id", protect, getOrderById);
 
-// GET /api/orders — Lấy tất cả đơn (Admin)
-// ⚠️ PHẢI đặt SAU /me vì / match sau các route cụ thể
-router.get('/', protect, admin, getAllOrders)
+// =========================
+// ADMIN
+// =========================
 
-// PUT /api/orders/:id/status — Cập nhật trạng thái (Admin)
-router.put('/:id/status', protect, admin, updateOrderStatus)
+// Thống kê dashboard
+router.get(
+  "/admin/thongke",
+  protect,
+  admin,
+  getThongKe
+);
 
-module.exports = router
+// Danh sách tất cả đơn hàng
+router.get(
+  "/admin/all",
+  protect,
+  admin,
+  getAllOrders
+);
+
+// Cập nhật trạng thái đơn hàng
+router.put(
+  "/admin/:id/status",
+  protect,
+  admin,
+  updateOrderStatus
+);
+
+module.exports = router;

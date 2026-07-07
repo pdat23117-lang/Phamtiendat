@@ -4,47 +4,74 @@ const router = express.Router();
 const {
   register,
   login,
-  getMe,
-  getUsers,
-  updateProfile,
-  changePassword,
   forgotPassword,
   resetPassword,
+  getProfile,
+  updateProfile,
+  changePassword,
+  getAllUsers,
+  updateUserRole,
+  deleteUser,
 } = require("../controllers/authController");
 
 const { protect } = require("../middleware/auth");
 const { admin } = require("../middleware/admin");
 
-// Đăng ký - đăng nhập
+// =========================
+// PUBLIC
+// =========================
+
+// Đăng ký
 router.post("/register", register);
+
+// Đăng nhập
 router.post("/login", login);
 
 // Quên mật khẩu
 router.post("/forgot-password", forgotPassword);
-router.put(
-  "/reset-password/:token",
-  resetPassword
-);
 
-// Thông tin cá nhân
-router.get("/me", protect, getMe);
-router.put(
-  "/profile",
-  protect,
-  updateProfile
-);
-router.put(
-  "/change-password",
-  protect,
-  changePassword
-);
+// Đặt lại mật khẩu
+router.post("/reset-password/:token", resetPassword);
 
-// Admin
+// =========================
+// USER
+// =========================
+
+// Hồ sơ cá nhân
+router.get("/profile", protect, getProfile);
+
+// Cập nhật hồ sơ
+router.put("/profile", protect, updateProfile);
+
+// Đổi mật khẩu
+router.put("/change-password", protect, changePassword);
+
+// =========================
+// ADMIN
+// =========================
+
+// Danh sách user
 router.get(
   "/users",
   protect,
   admin,
-  getUsers
+  getAllUsers
+);
+
+// Đổi quyền
+router.put(
+  "/users/:id/role",
+  protect,
+  admin,
+  updateUserRole
+);
+
+// Xóa user
+router.delete(
+  "/users/:id",
+  protect,
+  admin,
+  deleteUser
 );
 
 module.exports = router;

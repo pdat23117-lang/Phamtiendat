@@ -1,30 +1,77 @@
-const mongoose = require('mongoose')
-const Product = require('../models/sanpham')
- 
-// Helper: tìm theo _id (ObjectId) hoặc fallback tìm theo tên nếu id không hợp lệ
+const mongoose = require("mongoose");
+const Product = require("../models/sanpham");
+
+// Tìm sản phẩm theo ID
 const findProductById = async (id) => {
-  const isValidObjectId = mongoose.Types.ObjectId.isValid(id)
-  if (isValidObjectId) {
-    return await Product.findById(id)
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+  return await Product.findById(id);
+};
+
+// Kiểm tra dữ liệu
+const validateProduct = (gia, stock) => {
+  if (gia !== undefined && Number(gia) < 0) {
+    return "Giá sản phẩm không hợp lệ";
   }
-  return null
-}
- 
-// @desc    Lấy tất cả sản phẩm
-// @route   GET /api/products
-// @access  Public
+
+  if (stock !== undefined && Number(stock) < 0) {
+    return "Số lượng tồn kho không hợp lệ";
+  }
+
+  return null;
+};
+
+// ========================
+// LẤY DANH SÁCH SẢN PHẨM
+// ========================
 const getProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 12
-    const skip = (page - 1) * limit
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
 
-    const filter = {}
-    if (req.query.category) filter.category = req.query.category
-    if (req.query.search) filter.name = { $regex: req.query.search, $options: 'i' }
+    const filter = {};
 
-    const total = await Product.countDocuments(filter)
-    const products = await Product.find(filter).skip(skip).limit(limit)
+    if (req.query.search) {
+      filter.ten = {
+        $regex: req.query.search,
+        $options: "i",
+      };
+    }
+
+    if (req.query.hang) {
+      filter.hang = req.query.hang;
+    }
+
+    if (req.query.gia === "duoi20") {
+      filter.gia = { $lt: 20000000 };
+    }
+
+    if (req.query.gia === "20-30") {
+      filter.gia = {
+        $gte: 20000000,
+        $lte: 30000000,
+      };
+    }
+
+    if (req.query.gia === "tren30") {
+      filter.gia = {
+        $gt: 30000000,
+      };
+    }
+
+    let query = Product.find(filter);
+
+    if (req.query.sort === "tang") {
+      query = query.sort({ gia: 1 });
+    }
+
+    if (req.query.sort === "giam") {
+      query = query.sort({ gia: -1 });
+    }
+
+    const total = await Product.countDocuments(filter);
+
+    const products = await query.skip(skip).limit(limit);
 
     res.json({
       products,
@@ -34,213 +81,303 @@ const getProducts = async (req, res) => {
         pages: Math.ceil(total / limit),
         limit,
       },
-    })
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' })
+    res.status(500).json({
+      message: "Lỗi server",
+    });
   }
-}
- 
-// @desc    Lấy chi tiết 1 sản phẩm
-// @route   GET /api/products/:id
-// @access  Public
+};
+
+// ========================
+// CHI TIẾT SẢN PHẨM
+// ========================
 const getProductById = async (req, res) => {
   try {
-    const product = await findProductById(req.params.id)
+    const product = await findProductById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
     }
-    res.json(product)
+
+    res.json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({
+      message: error.message,
+    });
   }
-}
- 
-// @desc    Tạo sản phẩm mới
-// @route   POST /api/products
-// @access  Private/Admin
+};
+
+// ========================
+// THÊM SẢN PHẨM
+// ========================
 const createProduct = async (req, res) => {
   try {
-    const { name, price, image, category, description, stock } = req.body
- 
-    if (!name || !price || !image || !category) {
-      return res.status(400).json({ message: 'Vui lòng điền đầy đủ thông tin bắt buộc' })
+    const {
+      ten,
+      gia,
+      hang,
+      hinh,
+      ram,
+      bonho,
+      mau,
+      baohanh,
+      mota,
+      stock,
+      noibat,
+    } = req.body;
+
+    if (!ten || !gia || !hang || !hinh) {
+      return res.status(400).json({
+        message: "Vui lòng nhập đầy đủ thông tin",
+      });
     }
- 
+
+    const check = validateProduct(gia, stock);
+
+    if (check) {
+      return res.status(400).json({
+        message: check,
+      });
+    }
+
     const product = await Product.create({
-      name,
-      price: Number(price),
-      image,
-      category,
-      description: description || '',
+      ten,
+      gia: Number(gia),
+      hang,
+      hinh,
+      ram,
+      bonho,
+      mau,
+      baohanh,
+      mota,
       stock: Number(stock) || 0,
-    })
- 
-    res.status(201).json(product)
+      noibat,
+    });
+
+    res.status(201).json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({
+      message: error.message,
+    });
   }
-}
- 
-// @desc    Cập nhật sản phẩm
-// @route   PUT /api/products/:id
-// @access  Private/Admin
+};
+
+// ========================
+// SỬA SẢN PHẨM
+// ========================
 const updateProduct = async (req, res) => {
   try {
-    const product = await findProductById(req.params.id)
+    const product = await findProductById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
     }
- 
-    const { name, price, image, category, description, stock } = req.body
- 
-    // ✅ Dùng ?? thay vì || để không bị mất giá trị 0 hoặc chuỗi rỗng hợp lệ
-    product.name        = name        !== undefined ? name        : product.name
-    product.price       = price       !== undefined ? Number(price) : product.price
-    product.image       = image       !== undefined ? image       : product.image
-    product.category    = category    !== undefined ? category    : product.category
-    product.description = description !== undefined ? description : product.description
-    product.stock       = stock       !== undefined ? Number(stock) : product.stock
- 
-    const updatedProduct = await product.save()
-    res.json(updatedProduct)
+
+    const check = validateProduct(req.body.gia, req.body.stock);
+
+    if (check) {
+      return res.status(400).json({
+        message: check,
+      });
+    }
+
+    Object.assign(product, req.body);
+
+    const updated = await product.save();
+
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({
+      message: error.message,
+    });
   }
-}
- 
-// @desc    Xóa sản phẩm
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
+};
+
+// ========================
+// XÓA SẢN PHẨM
+// ========================
 const deleteProduct = async (req, res) => {
   try {
-    const product = await findProductById(req.params.id)
+    const product = await findProductById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
     }
- 
-    await product.deleteOne()
-    res.json({ success: true, message: 'Xóa sản phẩm thành công' })
+
+    await product.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Đã xóa sản phẩm",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({
+      message: error.message,
+    });
   }
-}
-// @desc    Đánh giá sản phẩm
-// @route   POST /api/products/:id/reviews
-// @access  Private
+};
+
+// ========================
+// ĐÁNH GIÁ
+// ========================
 const createReview = async (req, res) => {
   try {
-    const { rating, comment } = req.body
-    const product = await Product.findById(req.params.id)
-    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+    const { rating, comment } = req.body;
 
-    const alreadyReviewed = product.reviews.find(
-      (r) => r.user.toString() === req.user._id.toString()
-    )
-    if (alreadyReviewed) {
-      return res.status(400).json({ message: 'Bạn đã đánh giá sản phẩm này rồi' })
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
     }
 
-    const review = {
+    const reviewed = product.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+
+    if (reviewed) {
+      return res.status(400).json({
+        message: "Bạn đã đánh giá rồi",
+      });
+    }
+
+    product.reviews.push({
       user: req.user._id,
       name: req.user.name,
       rating: Number(rating),
       comment,
-    }
+    });
 
-    product.reviews.push(review)
-    product.numReviews = product.reviews.length
+    product.numReviews = product.reviews.length;
+
     product.averageRating =
-      product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
+      product.reviews.reduce((sum, r) => sum + r.rating, 0) /
+      product.reviews.length;
 
-    await product.save()
-    res.status(201).json({ message: 'Đánh giá thành công' })
+    await product.save();
+
+    res.status(201).json({
+      message: "Đánh giá thành công",
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' })
+    res.status(500).json({
+      message: "Lỗi server",
+    });
   }
-}
-// @desc    Lấy TẤT CẢ đánh giá từ mọi sản phẩm (dành cho Admin quản lý)
-// @route   GET /api/products/reviews/all
-// @access  Private/Admin
+};
+
+// ========================
+// LẤY TOÀN BỘ ĐÁNH GIÁ
+// ========================
 const getAllReviews = async (req, res) => {
   try {
-    const products = await Product.find({ 'reviews.0': { $exists: true } })
-      .select('name image reviews')
+    const products = await Product.find({
+      "reviews.0": { $exists: true },
+    });
 
-    const allReviews = []
+    const reviews = [];
+
     products.forEach((product) => {
       product.reviews.forEach((review) => {
-        allReviews.push({
+        reviews.push({
           _id: review._id,
           productId: product._id,
-          productName: product.name,
-          productImage: product.image,
-          name: review.name,
-          rating: review.rating,
-          comment: review.comment,
-          adminReply: review.adminReply,
-          repliedAt: review.repliedAt,
-          createdAt: review.createdAt,
-        })
-      })
-    })
+          productName: product.ten,
+          productImage: product.hinh,
+          ...review.toObject(),
+        });
+      });
+    });
 
-    // Mới nhất lên đầu
-    allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
-    res.json(allReviews)
+    res.json(reviews);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' })
+    res.status(500).json({
+      message: "Lỗi server",
+    });
   }
-}
+};
 
-// @desc    Admin trả lời 1 đánh giá
-// @route   PUT /api/products/:productId/reviews/:reviewId/reply
-// @access  Private/Admin
+// ========================
+// ADMIN TRẢ LỜI
+// ========================
 const replyReview = async (req, res) => {
   try {
-    const { reply } = req.body
-    if (!reply || !reply.trim()) {
-      return res.status(400).json({ message: 'Nội dung trả lời không được để trống' })
+    const product = await Product.findById(req.params.productId);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
     }
 
-    const product = await Product.findById(req.params.productId)
-    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+    const review = product.reviews.id(req.params.reviewId);
 
-    const review = product.reviews.id(req.params.reviewId)
-    if (!review) return res.status(404).json({ message: 'Không tìm thấy đánh giá' })
+    if (!review) {
+      return res.status(404).json({
+        message: "Không tìm thấy đánh giá",
+      });
+    }
 
-    review.adminReply = reply.trim()
-    review.repliedAt = new Date()
-    await product.save()
+    review.adminReply = req.body.reply;
+    review.repliedAt = new Date();
 
-    res.json({ message: 'Đã trả lời đánh giá' })
+    await product.save();
+
+    res.json({
+      message: "Đã trả lời đánh giá",
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' })
+    res.status(500).json({
+      message: "Lỗi server",
+    });
   }
-}
+};
 
-// @desc    Admin xoá 1 đánh giá
-// @route   DELETE /api/products/:productId/reviews/:reviewId
-// @access  Private/Admin
+// ========================
+// XÓA ĐÁNH GIÁ
+// ========================
 const deleteReview = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.productId)
-    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
+    const product = await Product.findById(req.params.productId);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm",
+      });
+    }
 
     product.reviews = product.reviews.filter(
       (r) => r._id.toString() !== req.params.reviewId
-    )
-    product.numReviews = product.reviews.length
-    product.averageRating = product.reviews.length
-      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
-      : 0
+    );
 
-    await product.save()
-    res.json({ message: 'Đã xoá đánh giá' })
+    product.numReviews = product.reviews.length;
+
+    product.averageRating =
+      product.reviews.length > 0
+        ? product.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          product.reviews.length
+        : 0;
+
+    await product.save();
+
+    res.json({
+      message: "Đã xóa đánh giá",
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' })
+    res.status(500).json({
+      message: "Lỗi server",
+    });
   }
-}
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -251,4 +388,4 @@ module.exports = {
   getAllReviews,
   replyReview,
   deleteReview,
-}
+};

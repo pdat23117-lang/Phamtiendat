@@ -1,188 +1,836 @@
 <template>
-  <div v-if="sp" class="container">
+  <div class="container">
 
-    <div class="left">
-      <img :src="sp.hinh" />
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      Đang tải sản phẩm...
     </div>
 
-    <div class="right">
-      <h1>{{ sp.ten }}</h1>
+    <div
+      v-else
+      class="product"
+    >
 
-      <h2>
-        {{ sp.gia.toLocaleString() }} đ
-      </h2>
+      <div class="left">
 
-      <p class="danhgia">
-        ⭐ {{ sp.danhgia }}/5
-      </p>
+        <img
+          :src="product.hinh"
+        />
 
-      <div class="thongtin">
-        <p><b>Hãng:</b> {{ sp.hang }}</p>
-        <p><b>RAM:</b> {{ sp.ram }}</p>
-        <p><b>Bộ nhớ:</b> {{ sp.bonho }}</p>
-        <p><b>Màu sắc:</b> {{ sp.mau }}</p>
-        <p><b>Bảo hành:</b> {{ sp.baohanh }}</p>
       </div>
 
-      <div class="buttons">
+      <div class="right">
+
+        <h1>
+          {{ product.ten }}
+        </h1>
+
+        <h2>
+          {{ product.gia?.toLocaleString() }} đ
+        </h2>
+
+        <table>
+
+          <tr>
+
+            <td>Hãng</td>
+
+            <td>{{ product.hang }}</td>
+
+          </tr>
+
+          <tr>
+
+            <td>RAM</td>
+
+            <td>{{ product.ram }}</td>
+
+          </tr>
+
+          <tr>
+
+            <td>Bộ nhớ</td>
+
+            <td>{{ product.bonho }}</td>
+
+          </tr>
+
+          <tr>
+
+            <td>Màu</td>
+
+            <td>{{ product.mau }}</td>
+
+          </tr>
+
+          <tr>
+
+            <td>Bảo hành</td>
+
+            <td>{{ product.baohanh }}</td>
+
+          </tr>
+
+          <tr>
+
+            <td>Tồn kho</td>
+
+            <td>{{ product.stock }}</td>
+
+          </tr>
+
+        </table>
+
+        <div class="quantity">
+
+          <button
+            @click="quantity--"
+            :disabled="quantity<=1"
+          >
+            -
+          </button>
+
+          <span>
+            {{ quantity }}
+          </span>
+
+          <button
+            @click="quantity++"
+          >
+            +
+          </button>
+
+        </div>
+
         <button
-          class="them"
-          @click="themGio"
+          class="cart"
+          @click="addToCart"
         >
           Thêm vào giỏ hàng
         </button>
 
-        <RouterLink to="/dathang">
-          <button class="mua">
-            Mua ngay
-          </button>
-        </RouterLink>
       </div>
+
     </div>
 
-  </div>
+    <div
+      class="description"
+      v-if="!loading"
+    >
 
-  <div class="lienquan">
-    <h2>Sản phẩm liên quan</h2>
+      <h2>Mô tả sản phẩm</h2>
 
-    <div class="products">
-      <ProductCard
-        v-for="item in lienQuan"
-        :key="item.id"
-        :product="item"
-      />
+      <p>
+
+        {{ product.mota }}
+
+      </p>
+
     </div>
+       <div
+      class="review"
+      v-if="!loading"
+    >
+
+      <h2>Đánh giá sản phẩm</h2>
+
+      <div
+        v-if="user"
+        class="review-form"
+      >
+
+        <select
+          v-model="rating"
+        >
+
+          <option :value="5">★★★★★</option>
+          <option :value="4">★★★★☆</option>
+          <option :value="3">★★★☆☆</option>
+          <option :value="2">★★☆☆☆</option>
+          <option :value="1">★☆☆☆☆</option>
+
+        </select>
+
+        <textarea
+          v-model="comment"
+          placeholder="Nhập đánh giá..."
+        ></textarea>
+
+        <button
+          @click="submitReview"
+        >
+          Gửi đánh giá
+        </button>
+
+      </div>
+
+      <div
+        v-else
+      >
+
+        <RouterLink
+          to="/dangnhap"
+        >
+          Đăng nhập để đánh giá
+        </RouterLink>
+
+      </div>
+
+      <div
+        class="review-item"
+        v-for="item in product.reviews"
+        :key="item._id"
+      >
+
+        <h4>
+
+          {{ item.name }}
+
+        </h4>
+
+        <p>
+
+          ⭐ {{ item.rating }}/5
+
+        </p>
+
+        <p>
+
+          {{ item.comment }}
+
+        </p>
+
+        <div
+          v-if="item.adminReply"
+          class="reply"
+        >
+
+          <strong>
+
+            Phản hồi từ cửa hàng
+
+          </strong>
+
+          <p>
+
+            {{ item.adminReply }}
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { useRoute } from "vue-router";
-import sanpham from "../data/sanpham";
-import { giohang } from "../stores/giohang";
-import ProductCard from "../components/ProductCard.vue";
 
-const route = useRoute();
+import axios from "axios";
 
-const sp = sanpham.find(
-  (item) =>
-    item.id === Number(route.params.id)
+import {
+ref,
+onMounted,
+} from "vue";
+
+import {
+useRoute,
+} from "vue-router";
+
+const route=
+useRoute();
+
+const token=
+localStorage.getItem(
+"token"
 );
 
-const lienQuan = sanpham.filter(
-  (item) =>
-    item.hang === sp.hang &&
-    item.id !== sp.id
+const user=
+JSON.parse(
+localStorage.getItem(
+"user"
+)
 );
 
-function themGio() {
-  const tonTai = giohang.find(
-    (item) => item.id === sp.id
-  );
+const loading=
+ref(true);
 
-  if (tonTai) {
-    tonTai.soluong++;
-  } else {
-    giohang.push({
-      ...sp,
-      soluong: 1,
-    });
-  }
+const quantity=
+ref(1);
 
-  localStorage.setItem(
-    "giohang",
-    JSON.stringify(giohang)
-  );
+const rating=
+ref(5);
 
-  alert("Đã thêm vào giỏ hàng!");
+const comment=
+ref("");
+
+const product=
+ref({});
+
+const loadProduct=
+async()=>{
+
+try{
+
+const res=
+await axios.get(
+
+`http://localhost:5000/api/sanpham/${route.params.id}`
+
+);
+
+product.value=
+res.data;
+
 }
+catch(err){
+
+console.log(err);
+
+}
+
+loading.value=false;
+
+};
+ const addToCart =
+async()=>{
+
+if(!token){
+
+alert(
+"Vui lòng đăng nhập"
+);
+
+return;
+
+}
+
+try{
+
+await axios.post(
+
+"http://localhost:5000/api/cart",
+
+{
+
+productId:
+product.value._id,
+
+soluong:
+quantity.value,
+
+},
+
+{
+
+headers:{
+
+Authorization:
+`Bearer ${token}`,
+
+},
+
+}
+
+);
+
+alert(
+"Đã thêm vào giỏ hàng"
+);
+
+}
+catch(err){
+
+alert(
+err.response?.data?.message
+);
+
+}
+
+};
+
+const submitReview=
+async()=>{
+
+if(!comment.value){
+
+alert(
+"Vui lòng nhập nội dung đánh giá"
+);
+
+return;
+
+}
+
+try{
+
+await axios.post(
+
+`http://localhost:5000/api/sanpham/${product.value._id}/reviews`,
+
+{
+
+rating:
+rating.value,
+
+comment:
+comment.value,
+
+},
+
+{
+
+headers:{
+
+Authorization:
+`Bearer ${token}`,
+
+},
+
+}
+
+);
+
+alert(
+"Đánh giá thành công"
+);
+
+comment.value="";
+
+rating.value=5;
+
+loadProduct();
+
+}
+catch(err){
+
+alert(
+err.response?.data?.message
+);
+
+}
+
+};
+
+onMounted(
+loadProduct
+);
+
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  gap: 80px;
-  padding: 80px;
-  min-height: 80vh;
+
+.container{
+
+padding:40px;
+
 }
 
-.left {
-  flex: 1;
+.loading{
+
+text-align:center;
+
+padding:100px;
+
 }
 
-.left img {
-  width: 100%;
-  max-width: 500px;
+.product{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:40px;
+
 }
 
-.right {
-  flex: 1;
+.left{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
 }
 
-.right h1 {
-  font-size: 40px;
-  margin-bottom: 20px;
+.left img{
+
+width:100%;
+
+max-width:420px;
+
+object-fit:contain;
+
 }
 
-.right h2 {
-  color: red;
-  margin-bottom: 20px;
+.right h1{
+
+margin-bottom:15px;
+
 }
 
-.danhgia {
-  color: orange;
-  font-size: 20px;
-  margin-bottom: 30px;
+.right h2{
+
+color:red;
+
+margin-bottom:20px;
+
+font-size:32px;
+
 }
 
-.thongtin {
-  background: #f5f5f5;
-  padding: 30px;
-  border-radius: 20px;
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-bottom:25px;
+
 }
 
-.thongtin p {
-  margin: 15px 0;
+td{
+
+padding:12px;
+
+border:1px solid #ddd;
+
 }
 
-.buttons {
-  display: flex;
-  gap: 20px;
-  margin-top: 40px;
+.quantity{
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+margin-bottom:25px;
+
+}
+.cart{
+
+width:100%;
+
+padding:16px;
+
+background:#111827;
+
+color:white;
+
+border:none;
+
+border-radius:10px;
+
+font-size:17px;
+
+cursor:pointer;
+
+margin-bottom:35px;
+
 }
 
-.them {
-  background: black;
-  color: white;
-  border: none;
-  padding: 18px 35px;
-  border-radius: 12px;
-  font-size: 18px;
-  cursor: pointer;
+.cart:hover{
+
+background:#000;
+
 }
 
-.mua {
-  background: red;
-  color: white;
-  border: none;
-  padding: 18px 35px;
-  border-radius: 12px;
-  font-size: 18px;
-  cursor: pointer;
+.quantity button{
+
+width:40px;
+
+height:40px;
+
+border:none;
+
+border-radius:50%;
+
+background:#111827;
+
+color:white;
+
+cursor:pointer;
+
+font-size:18px;
+
 }
 
-.lienquan {
-  padding: 0 80px 80px;
+.quantity span{
+
+font-size:20px;
+
+font-weight:bold;
+
+min-width:40px;
+
+text-align:center;
+
 }
 
-.lienquan h2 {
-  margin-bottom: 40px;
+.description{
+
+margin-top:60px;
+
+background:white;
+
+padding:30px;
+
+border-radius:12px;
+
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+
 }
 
-.products {
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fit, minmax(250px, 1fr));
+.description h2{
 
-  gap: 30px;
+margin-bottom:20px;
+
 }
+
+.description p{
+
+line-height:1.8;
+
+color:#555;
+
+}
+
+.review{
+
+margin-top:50px;
+
+background:white;
+
+padding:30px;
+
+border-radius:12px;
+
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+
+}
+
+.review h2{
+
+margin-bottom:25px;
+
+}
+
+.review-form{
+
+margin-bottom:35px;
+
+}
+
+.review-form select{
+
+padding:12px;
+
+margin-bottom:15px;
+
+border-radius:8px;
+
+border:1px solid #ddd;
+
+}
+
+.review-form textarea{
+
+width:100%;
+
+height:120px;
+
+padding:15px;
+
+border:1px solid #ddd;
+
+border-radius:8px;
+
+resize:none;
+
+margin-bottom:15px;
+
+}
+
+.review-form button{
+
+padding:14px 30px;
+
+background:#16a34a;
+
+color:white;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+}
+
+.review-form button:hover{
+
+background:#15803d;
+
+}
+
+.review-item{
+
+padding:20px 0;
+
+border-top:1px solid #eee;
+
+}
+
+.review-item h4{
+
+margin-bottom:8px;
+
+}
+
+.review-item p{
+
+margin:6px 0;
+
+}
+
+.reply{
+
+margin-top:15px;
+
+padding:15px;
+
+background:#f3f4f6;
+
+border-left:5px solid #16a34a;
+
+border-radius:6px;
+
+}
+@media (max-width:1000px){
+
+.product{
+
+grid-template-columns:1fr;
+
+}
+
+.left{
+
+margin-bottom:30px;
+
+}
+
+}
+
+@media (max-width:768px){
+
+.container{
+
+padding:20px;
+
+}
+
+.left img{
+
+max-width:280px;
+
+}
+
+.right h1{
+
+font-size:28px;
+
+}
+
+.right h2{
+
+font-size:26px;
+
+}
+
+.quantity{
+
+justify-content:center;
+
+}
+
+.cart{
+
+font-size:16px;
+
+}
+
+.description,
+.review{
+
+padding:20px;
+
+}
+
+.review-form button{
+
+width:100%;
+
+}
+
+}
+
+@media (max-width:480px){
+
+h1{
+
+font-size:24px;
+
+}
+
+table td{
+
+padding:10px;
+
+font-size:14px;
+
+}
+
+.quantity button{
+
+width:36px;
+
+height:36px;
+
+}
+
+.quantity span{
+
+font-size:18px;
+
+}
+
+.left img{
+
+max-width:220px;
+
+}
+
+.review-item{
+
+font-size:14px;
+
+}
+
+.reply{
+
+font-size:14px;
+
+padding:12px;
+
+}
+
+}
+
 </style>

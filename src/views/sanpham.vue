@@ -1,328 +1,716 @@
 <template>
-  <div class="container">
-    <h1>Sản phẩm</h1>
 
-    <div class="toolbar">
-      <select v-model="hang">
-        <option value="">
-          Tất cả hãng
-        </option>
+<div class="container">
 
-        <option value="Apple">
-          Apple
-        </option>
+<h1>Tất cả sản phẩm</h1>
 
-        <option value="Samsung">
-          Samsung
-        </option>
+<div class="toolbar">
 
-        <option value="Xiaomi">
-          Xiaomi
-        </option>
-      </select>
+<input
+v-model="keyword"
+placeholder="Tìm kiếm sản phẩm..."
+>
 
-      <select v-model="gia">
-        <option value="">
-          Tất cả giá
-        </option>
+<select v-model="hang">
 
-        <option value="duoi20">
-          Dưới 20 triệu
-        </option>
+<option value="">
+Tất cả hãng
+</option>
 
-        <option value="20-30">
-          Từ 20 - 30 triệu
-        </option>
+<option value="Apple">
+Apple
+</option>
 
-        <option value="tren30">
-          Trên 30 triệu
-        </option>
-      </select>
+<option value="Samsung">
+Samsung
+</option>
 
-      <select v-model="sapXep">
-        <option value="">
-          Sắp xếp
-        </option>
+<option value="Xiaomi">
+Xiaomi
+</option>
 
-        <option value="tang">
-          Giá tăng dần
-        </option>
+</select>
 
-        <option value="giam">
-          Giá giảm dần
-        </option>
-      </select>
-    </div>
+<select v-model="sort">
 
-    <div class="products">
-      <ProductCard
-        v-for="sp in dsPhanTrang"
-        :key="sp.id"
-        :product="sp"
-      />
-    </div>
+<option value="">
+Sắp xếp
+</option>
 
-    <div
-      v-if="tongSoTrang > 1"
-      class="pagination"
-    >
-      <button
-        @click="
-          trangHienTai =
-            Math.max(
-              1,
-              trangHienTai - 1
-            )
-        "
-        :disabled="
-          trangHienTai === 1
-        "
-      >
-        ← Trước
-      </button>
+<option value="asc">
+Giá tăng dần
+</option>
 
-      <button
-        v-for="n in tongSoTrang"
-        :key="n"
-        @click="
-          trangHienTai = n
-        "
-        :class="{
-          active:
-            trangHienTai === n,
-        }"
-      >
-        {{ n }}
-      </button>
+<option value="desc">
+Giá giảm dần
+</option>
 
-      <button
-        @click="
-          trangHienTai =
-            Math.min(
-              tongSoTrang,
-              trangHienTai + 1
-            )
-        "
-        :disabled="
-          trangHienTai ===
-          tongSoTrang
-        "
-      >
-        Sau →
-      </button>
-    </div>
+</select>
 
-    <h2 v-if="dsSanPham.length === 0">
-      Không tìm thấy sản phẩm nào.
-    </h2>
-  </div>
+</div>
+
+<div
+v-if="loading"
+class="loading"
+>
+
+Đang tải dữ liệu...
+
+</div>
+
+<div
+v-else
+class="products"
+>
+
+<div
+class="card"
+v-for="sp in pageProducts"
+:key="sp._id"
+>
+
+<img
+:src="sp.hinh"
+:alt="sp.ten"
+@click="detail(sp._id)"
+>
+
+<h3>
+
+{{ sp.ten }}
+
+</h3>
+
+<p>
+
+{{ sp.hang }}
+
+</p>
+
+<h2>
+
+{{ sp.gia.toLocaleString() }} đ
+
+</h2>
+
+<button
+@click="detail(sp._id)"
+>
+
+Xem chi tiết
+
+</button>
+
+</div>
+
+</div>
+
+<div
+v-if="!loading && filteredProducts.length>0"
+class="pagination"
+>
+
+<button
+@click="currentPage--"
+:disabled="currentPage===1"
+>
+
+<<
+
+</button>
+
+<button
+v-for="page in totalPages"
+:key="page"
+@click="currentPage=page"
+:class="{
+active:currentPage===page
+}"
+>
+
+{{ page }}
+
+</button>
+
+<button
+@click="currentPage++"
+:disabled="currentPage===totalPages"
+>
+
+>>
+
+</button>
+
+</div>
+
+<div
+v-if="!loading && filteredProducts.length===0"
+class="empty"
+>
+
+<h2>
+
+Không tìm thấy sản phẩm
+
+</h2>
+
+</div>
+
+</div>
+
 </template>
 
 <script setup>
+
+import axios from "axios";
+
 import {
-  ref,
-  computed,
-  watch,
+ref,
+computed,
+watch,
+onMounted
 } from "vue";
 
-import ProductCard from "../components/ProductCard.vue";
-import sanpham from "../data/sanpham";
-
 import {
-  useTimKiemStore,
-} from "../stores/timkiem";
+useRouter
+} from "vue-router";
 
-const timKiemStore =
-  useTimKiemStore();
+const router=useRouter();
 
-const hang = ref("");
-const gia = ref("");
-const sapXep = ref("");
+const loading=ref(true);
 
-const trangHienTai = ref(1);
-const soSanPhamMoiTrang = 6;
+const products=ref([]);
 
-const dsSanPham = computed(() => {
-  let ds = sanpham.filter(
-    (sp) => {
-      const dkTen =
-        sp.ten
-          .toLowerCase()
-          .includes(
-            timKiemStore.tuKhoa
-              .toLowerCase()
-          );
+const keyword=ref("");
 
-      const dkHang =
-        hang.value === "" ||
-        sp.hang ===
-          hang.value;
+const hang=ref("");
 
-      let dkGia = true;
+const sort=ref("");
 
-      if (
-        gia.value ===
-        "duoi20"
-      ) {
-        dkGia =
-          sp.gia <
-          20000000;
-      }
+const currentPage=ref(1);
 
-      if (
-        gia.value ===
-        "20-30"
-      ) {
-        dkGia =
-          sp.gia >=
-            20000000 &&
-          sp.gia <=
-            30000000;
-      }
+const perPage=8;
 
-      if (
-        gia.value ===
-        "tren30"
-      ) {
-        dkGia =
-          sp.gia >
-          30000000;
-      }
+const loadData=async()=>{
 
-      return (
-        dkTen &&
-        dkHang &&
-        dkGia
-      );
-    }
-  );
+try{
 
-  if (
-    sapXep.value ===
-    "tang"
-  ) {
-    ds.sort(
-      (a, b) =>
-        a.gia - b.gia
-    );
-  }
+const res=
 
-  if (
-    sapXep.value ===
-    "giam"
-  ) {
-    ds.sort(
-      (a, b) =>
-        b.gia - a.gia
-    );
-  }
+await axios.get(
 
-  return ds;
+"http://localhost:5000/api/sanpham"
+
+);
+
+products.value=
+
+res.data.products;
+
+}catch(err){
+
+console.log(err);
+
+}
+
+loading.value=false;
+
+};
+const filteredProducts = computed(() => {
+
+let data = [...products.value];
+
+if (keyword.value) {
+
+data = data.filter(item =>
+
+item.ten
+.toLowerCase()
+.includes(
+keyword.value
+.toLowerCase()
+)
+
+);
+
+}
+
+if (hang.value) {
+
+data = data.filter(item =>
+
+item.hang === hang.value
+
+);
+
+}
+
+if (sort.value === "asc") {
+
+data.sort((a, b) =>
+
+a.gia - b.gia
+
+);
+
+}
+
+if (sort.value === "desc") {
+
+data.sort((a, b) =>
+
+b.gia - a.gia
+
+);
+
+}
+
+return data;
+
 });
 
-const tongSoTrang =
-  computed(() => {
-    return Math.ceil(
-      dsSanPham.value.length /
-        soSanPhamMoiTrang
-    );
-  });
+const totalPages = computed(() => {
 
-const dsPhanTrang =
-  computed(() => {
-    const batDau =
-      (trangHienTai.value - 1) *
-      soSanPhamMoiTrang;
+return Math.ceil(
 
-    const ketThuc =
-      batDau +
-      soSanPhamMoiTrang;
+filteredProducts.value.length /
 
-    return dsSanPham.value.slice(
-      batDau,
-      ketThuc
-    );
-  });
+perPage
+
+);
+
+});
+
+const pageProducts = computed(() => {
+
+const start =
+
+(currentPage.value - 1)
+
+*
+
+perPage;
+
+return filteredProducts.value.slice(
+
+start,
+
+start + perPage
+
+);
+
+});
 
 watch(
-  [
-    hang,
-    gia,
-    sapXep,
-    () =>
-      timKiemStore.tuKhoa,
-  ],
-  () => {
-    trangHienTai.value = 1;
-  }
+
+[
+keyword,
+hang,
+sort,
+],
+
+() => {
+
+currentPage.value = 1;
+
+}
+
 );
+
+const detail = (id) => {
+
+router.push(
+
+`/chitietsanpham/${id}`
+
+);
+
+};
+
+onMounted(
+
+loadData
+
+);
+
 </script>
 
 <style scoped>
-.container {
-  padding: 60px;
+
+.container{
+
+padding:40px;
+
+max-width:1400px;
+
+margin:auto;
+
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 40px;
-  font-size: 40px;
+h1{
+
+margin-bottom:30px;
+
+font-size:34px;
+
 }
 
-.toolbar {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 50px;
-  flex-wrap: wrap;
+.toolbar{
+
+display:flex;
+
+gap:20px;
+
+flex-wrap:wrap;
+
+margin-bottom:35px;
+
 }
 
-select {
-  padding: 15px 20px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  font-size: 16px;
+.toolbar input{
+
+flex:1;
+
+min-width:250px;
+
+padding:14px;
+
+border:1px solid #ddd;
+
+border-radius:10px;
+
+font-size:15px;
+
 }
 
-.products {
-  display: grid;
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(280px, 1fr)
-    );
+.toolbar select{
 
-  gap: 30px;
+padding:14px;
+
+border:1px solid #ddd;
+
+border-radius:10px;
+
+font-size:15px;
+
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 60px;
+.loading{
+
+text-align:center;
+
+padding:80px;
+
+font-size:22px;
+
 }
 
-.pagination button {
-  border: none;
-  padding: 12px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  background: #f3f4f6;
-  transition: 0.3s;
+.products{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(
+
+auto-fill,
+
+minmax(260px,1fr)
+
+);
+
+gap:30px;
+
+}
+.card{
+
+background:white;
+
+border-radius:12px;
+
+padding:20px;
+
+box-shadow:0 2px 10px rgba(0,0,0,.08);
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+transition:.3s;
+
 }
 
-.pagination button:hover {
-  background: #e5e7eb;
+.card:hover{
+
+transform:translateY(-5px);
+
+box-shadow:0 8px 20px rgba(0,0,0,.15);
+
 }
 
-.active {
-  background: black !important;
-  color: white;
+.card img{
+
+width:200px;
+
+height:200px;
+
+object-fit:contain;
+
+cursor:pointer;
+
+margin-bottom:20px;
+
 }
 
-h2 {
-  text-align: center;
-  margin-top: 50px;
-  color: #666;
+.card h3{
+
+font-size:18px;
+
+text-align:center;
+
+margin-bottom:10px;
+
+min-height:50px;
+
 }
+
+.card p{
+
+color:#666;
+
+margin-bottom:12px;
+
+}
+
+.card h2{
+
+font-size:24px;
+
+color:#ef4444;
+
+margin-bottom:18px;
+
+}
+
+.card button{
+
+width:100%;
+
+padding:14px;
+
+background:#111827;
+
+color:white;
+
+border:none;
+
+border-radius:8px;
+
+font-size:16px;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.card button:hover{
+
+background:#000;
+
+}
+
+.pagination{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:10px;
+
+margin-top:40px;
+
+flex-wrap:wrap;
+
+}
+
+.pagination button{
+
+min-width:45px;
+
+height:45px;
+
+border:none;
+
+border-radius:8px;
+
+background:#e5e7eb;
+
+cursor:pointer;
+
+font-size:16px;
+
+font-weight:bold;
+
+transition:.3s;
+
+}
+
+.pagination button:hover{
+
+background:#d1d5db;
+
+}
+
+.pagination button.active{
+
+background:#111827;
+
+color:white;
+
+}
+
+.pagination button:disabled{
+
+opacity:.5;
+
+cursor:not-allowed;
+
+}
+
+.empty{
+
+text-align:center;
+
+padding:80px;
+
+font-size:22px;
+
+color:#666;
+
+}
+
+.empty h2{
+
+margin-bottom:20px;
+
+}
+.empty p{
+
+margin-top:10px;
+
+color:#999;
+
+}
+
+@media(max-width:900px){
+
+.container{
+
+padding:20px;
+
+}
+
+.toolbar{
+
+flex-direction:column;
+
+}
+
+.toolbar input,
+.toolbar select{
+
+width:100%;
+
+}
+
+.products{
+
+grid-template-columns:
+
+repeat(
+auto-fill,
+minmax(220px,1fr)
+);
+
+}
+
+}
+
+@media(max-width:600px){
+
+h1{
+
+font-size:28px;
+
+text-align:center;
+
+}
+
+.card{
+
+padding:15px;
+
+}
+
+.card img{
+
+width:150px;
+
+height:150px;
+
+}
+
+.card h3{
+
+font-size:16px;
+
+min-height:auto;
+
+}
+
+.card h2{
+
+font-size:20px;
+
+}
+
+.card button{
+
+padding:12px;
+
+font-size:15px;
+
+}
+
+.pagination{
+
+gap:8px;
+
+}
+
+.pagination button{
+
+min-width:38px;
+
+height:38px;
+
+font-size:14px;
+
+}
+
+.empty{
+
+padding:50px 20px;
+
+font-size:18px;
+
+}
+
+}
+
 </style>

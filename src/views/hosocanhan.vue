@@ -1,61 +1,204 @@
 <template>
   <div class="container">
-    <h1>Hồ sơ cá nhân</h1>
 
     <div class="card">
-      <p>
-        <b>Họ tên:</b>
-        {{ user.name }}
-      </p>
 
-      <p>
-        <b>Email:</b>
-        {{ user.email }}
-      </p>
+      <h2>Hồ sơ cá nhân</h2>
 
-      <p>
-        <b>Vai trò:</b>
-        {{ user.role }}
-      </p>
+      <form @submit.prevent="capNhat">
+
+        <input
+          v-model="user.name"
+          placeholder="Họ và tên"
+        />
+
+        <input
+          v-model="user.email"
+          disabled
+        />
+
+        <button :disabled="loading">
+          {{ loading ? "Đang lưu..." : "Cập nhật" }}
+        </button>
+
+      </form>
 
       <RouterLink
+        class="link"
         to="/doimatkhau"
       >
-        <button>
-          Đổi mật khẩu
-        </button>
+        Đổi mật khẩu
       </RouterLink>
+
+      <p
+        class="success"
+        v-if="success"
+      >
+        {{ success }}
+      </p>
+
+      <p
+        class="error"
+        v-if="error"
+      >
+        {{ error }}
+      </p>
+
     </div>
+
   </div>
 </template>
 
 <script setup>
-const user = JSON.parse(
-  localStorage.getItem("user")
-);
+import axios from "axios";
+import {
+  ref,
+  onMounted,
+} from "vue";
+
+const loading = ref(false);
+
+const success = ref("");
+
+const error = ref("");
+
+const user = ref({
+  name: "",
+  email: "",
+});
+
+const token =
+  localStorage.getItem("token");
+
+const loadProfile = async () => {
+  try {
+
+    const res =
+      await axios.get(
+        "http://localhost:5000/api/auth/profile",
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+    user.value = res.data;
+
+  } catch (err) {
+
+    error.value =
+      "Không tải được thông tin";
+
+  }
+};
+
+const capNhat = async () => {
+
+  loading.value = true;
+
+  success.value = "";
+
+  error.value = "";
+
+  try {
+
+    const res =
+      await axios.put(
+        "http://localhost:5000/api/auth/profile",
+        {
+          name: user.value.name,
+        },
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(res.data)
+    );
+
+    success.value =
+      "Cập nhật thành công";
+
+  } catch (err) {
+
+    error.value =
+      err.response?.data?.message ||
+      "Cập nhật thất bại";
+
+  }
+
+  loading.value = false;
+};
+
+onMounted(() => {
+  loadProfile();
+});
 </script>
 
 <style scoped>
-.container {
-  padding: 50px;
+
+.container{
+  display:flex;
+  justify-content:center;
+  padding:60px;
 }
 
-.card {
-  background: white;
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow:
-    0 5px 20px
-    rgba(0, 0, 0, 0.1);
+.card{
+  width:500px;
+  background:white;
+  padding:35px;
+  border-radius:15px;
+  box-shadow:0 5px 20px #ddd;
 }
 
-button {
-  margin-top: 20px;
-  background: black;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 12px;
-  cursor: pointer;
+h2{
+  text-align:center;
+  margin-bottom:25px;
 }
+
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:15px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:black;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#333;
+}
+
+.link{
+  display:block;
+  text-align:center;
+  margin-top:20px;
+}
+
+.success{
+  color:green;
+  margin-top:15px;
+}
+
+.error{
+  color:red;
+  margin-top:15px;
+}
+
 </style>

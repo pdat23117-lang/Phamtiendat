@@ -4,17 +4,27 @@ const admin = (
   next
 ) => {
   if (
-    req.user &&
-    req.user.role ===
-      "admin"
+    !req.user
   ) {
-    next();
-  } else {
-    res.status(403).json({
+    return res.status(401).json({
+      success: false,
+      message:
+        "Chưa đăng nhập",
+    });
+  }
+
+  if (
+    req.user.role !==
+    "admin"
+  ) {
+    return res.status(403).json({
+      success: false,
       message:
         "Bạn không có quyền truy cập",
     });
   }
+
+  next();
 };
 
 module.exports = {

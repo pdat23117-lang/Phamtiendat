@@ -1,26 +1,41 @@
-const mongoose = require('mongoose')
-const dotenv = require('dotenv')
-const Product = require('./src/models/Product')
-const products = require('./products.json')
+require("dotenv").config();
 
-dotenv.config()
+const mongoose = require("mongoose");
+
+const Product = require("./src/models/sanpham");
+
+const products = require("./products.json");
 
 const seedDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI)
-    console.log('✅ Đã kết nối MongoDB')
+    await mongoose.connect(
+      process.env.MONGO_URI
+    );
 
-    await Product.deleteMany()
-    console.log('🗑️ Đã xóa dữ liệu cũ')
+    console.log(
+      "✅ Đã kết nối MongoDB"
+    );
 
-    await Product.insertMany(products)
-    console.log(`✅ Đã thêm ${products.length} sản phẩm vào database`)
+    await Product.deleteMany();
 
-    process.exit()
-  } catch (error) {
-    console.error('❌ Lỗi:', error)
-    process.exit(1)
+    console.log(
+      "🗑️ Đã xóa dữ liệu cũ"
+    );
+
+    await Product.insertMany(
+      products
+    );
+
+    console.log(
+      `✅ Đã thêm ${products.length} sản phẩm`
+    );
+
+    process.exit();
+  } catch (err) {
+    console.log(err);
+
+    process.exit(1);
   }
-}
+};
 
-seedDB()
+seedDB();

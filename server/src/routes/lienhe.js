@@ -1,21 +1,58 @@
-// server/src/routes/contact.js
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
+
 const {
-  createContact,
-  getContacts,
-  markAsRead,
-} = require('../controllers/contactController')
-const { protect } = require('../middleware/auth')
-const { admin } = require('../middleware/admin')
+  createLienHe,
+  getAllLienHe,
+  getLienHeById,
+  updateTrangThai,
+  deleteLienHe,
+} = require("../controllers/lienhe");
 
-// @route   POST /api/contact   - user (không cần đăng nhập) gửi liên hệ
-router.post('/', createContact)
+const { protect } = require("../middleware/auth");
+const { admin } = require("../middleware/admin");
 
-// @route   GET /api/contact    - chỉ admin xem danh sách liên hệ
-router.get('/', protect, admin, getContacts)
+// =====================================
+// KHÁCH HÀNG
+// =====================================
 
-// @route   PUT /api/contact/:id/read - admin đánh dấu đã đọc
-router.put('/:id/read', protect, admin, markAsRead)
+// Gửi liên hệ
+router.post("/", createLienHe);
 
-module.exports = router
+// =====================================
+// ADMIN
+// =====================================
+
+// Danh sách liên hệ
+router.get(
+  "/admin",
+  protect,
+  admin,
+  getAllLienHe
+);
+
+// Chi tiết liên hệ
+router.get(
+  "/admin/:id",
+  protect,
+  admin,
+  getLienHeById
+);
+
+// Đánh dấu đã xử lý
+router.put(
+  "/admin/:id",
+  protect,
+  admin,
+  updateTrangThai
+);
+
+// Xóa liên hệ
+router.delete(
+  "/admin/:id",
+  protect,
+  admin,
+  deleteLienHe
+);
+
+module.exports = router;

@@ -1,11 +1,55 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const ContactSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  subject: { type: String, default: '' },
-  message: { type: String, required: true },
-  isRead: { type: Boolean, default: false }
-}, { timestamps: true })
+const LienHeSchema = new mongoose.Schema(
+  {
+    hoTen: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-module.exports = mongoose.model('Contact', ContactSchema)
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    soDienThoai: {
+      type: String,
+      default: "",
+    },
+
+    tieuDe: {
+      type: String,
+      required: true,
+    },
+
+    noiDung: {
+      type: String,
+      required: true,
+    },
+
+    trangThai: {
+      type: String,
+      enum: [
+        "chuaxuly",
+        "daxuly",
+      ],
+      default: "chuaxuly",
+    },
+
+    ghiChuAdmin: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.model(
+  "LienHe",
+  LienHeSchema
+);

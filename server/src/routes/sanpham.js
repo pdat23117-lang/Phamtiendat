@@ -1,5 +1,6 @@
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
+
 const {
   getProducts,
   getProductById,
@@ -10,21 +11,86 @@ const {
   getAllReviews,
   replyReview,
   deleteReview,
-} = require('../controllers/productController')
-const { protect } = require('../middleware/auth')
-const { admin } = require('../middleware/admin')
+} = require("../controllers/sanpham");
 
-// ⚠️ Route '/reviews/all' phải đặt TRƯỚC '/:id' để không bị match nhầm thành id="reviews"
-router.get('/reviews/all', protect, admin, getAllReviews)
+const { protect } = require("../middleware/auth");
+const { admin } = require("../middleware/admin");
 
-router.get('/', getProducts)
-router.get('/:id', getProductById)
-router.post('/', protect, admin, createProduct)
-router.put('/:id', protect, admin, updateProduct)
-router.delete('/:id', protect, admin, deleteProduct)
+// =====================================
+// PUBLIC
+// =====================================
 
-router.post('/:id/reviews', protect, createReview)
-router.put('/:productId/reviews/:reviewId/reply', protect, admin, replyReview)
-router.delete('/:productId/reviews/:reviewId', protect, admin, deleteReview)
+// Danh sách sản phẩm
+router.get("/", getProducts);
 
-module.exports = router
+// Chi tiết sản phẩm
+router.get("/:id", getProductById);
+
+// =====================================
+// REVIEW
+// =====================================
+
+// Người dùng đánh giá
+router.post(
+  "/:id/reviews",
+  protect,
+  createReview
+);
+
+// =====================================
+// ADMIN REVIEW
+// =====================================
+
+// Tất cả đánh giá
+router.get(
+  "/admin/reviews",
+  protect,
+  admin,
+  getAllReviews
+);
+
+// Trả lời đánh giá
+router.put(
+  "/admin/:productId/reviews/:reviewId/reply",
+  protect,
+  admin,
+  replyReview
+);
+
+// Xóa đánh giá
+router.delete(
+  "/admin/:productId/reviews/:reviewId",
+  protect,
+  admin,
+  deleteReview
+);
+
+// =====================================
+// ADMIN PRODUCT
+// =====================================
+
+// Thêm sản phẩm
+router.post(
+  "/",
+  protect,
+  admin,
+  createProduct
+);
+
+// Sửa sản phẩm
+router.put(
+  "/:id",
+  protect,
+  admin,
+  updateProduct
+);
+
+// Xóa sản phẩm
+router.delete(
+  "/:id",
+  protect,
+  admin,
+  deleteProduct
+);
+
+module.exports = router;

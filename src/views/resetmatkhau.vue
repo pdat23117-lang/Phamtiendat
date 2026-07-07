@@ -1,30 +1,29 @@
 <template>
   <div class="container">
-    <div class="box">
-      <h1>Đặt lại mật khẩu</h1>
+    <div class="card">
+      <h2>Đặt lại mật khẩu</h2>
 
-      <input
-        v-model="password"
-        type="password"
-        placeholder="Mật khẩu mới"
-      />
+      <form @submit.prevent="resetPassword">
 
-      <input
-        v-model="confirmPassword"
-        type="password"
-        placeholder="Nhập lại mật khẩu"
-      />
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Mật khẩu mới"
+          required
+        />
 
-      <button
-        @click="doiMatKhau"
-        :disabled="loading"
-      >
-        {{
-          loading
-            ? "Đang xử lý..."
-            : "Đổi mật khẩu"
-        }}
-      </button>
+        <input
+          v-model="confirmPassword"
+          type="password"
+          placeholder="Nhập lại mật khẩu"
+          required
+        />
+
+        <button :disabled="loading">
+          {{ loading ? "Đang cập nhật..." : "Đổi mật khẩu" }}
+        </button>
+
+      </form>
 
       <p
         v-if="message"
@@ -39,6 +38,11 @@
       >
         {{ error }}
       </p>
+
+      <RouterLink to="/dangnhap">
+        Quay lại đăng nhập
+      </RouterLink>
+
     </div>
   </div>
 </template>
@@ -46,151 +50,116 @@
 <script setup>
 import axios from "axios";
 import { ref } from "vue";
-import {
-  useRoute,
-  useRouter,
-} from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
 
 const password = ref("");
-const confirmPassword =
-  ref("");
+const confirmPassword = ref("");
 
 const loading = ref(false);
+
 const message = ref("");
+
 const error = ref("");
 
-const token =
-  route.params.token;
+const resetPassword = async () => {
 
-const doiMatKhau =
-  async () => {
-    error.value = "";
-    message.value = "";
+  if (password.value !== confirmPassword.value) {
+    error.value = "Mật khẩu không khớp";
+    return;
+  }
 
-    if (
-      !password.value ||
-      !confirmPassword.value
-    ) {
-      error.value =
-        "Vui lòng nhập đầy đủ thông tin";
-      return;
-    }
+  loading.value = true;
+  error.value = "";
+  message.value = "";
 
-    if (
-      password.value !==
-      confirmPassword.value
-    ) {
-      error.value =
-        "Mật khẩu nhập lại không khớp";
-      return;
-    }
+  try {
 
-    if (
-      password.value.length < 6
-    ) {
-      error.value =
-        "Mật khẩu tối thiểu 6 ký tự";
-      return;
-    }
+    const res = await axios.post(
+      `http://localhost:5000/api/auth/reset-password/${route.params.token}`,
+      {
+        password: password.value,
+      }
+    );
 
-    try {
-      loading.value = true;
+    message.value = res.data.message;
 
-      const res =
-        await axios.put(
-          `http://localhost:5000/api/auth/reset-password/${token}`,
-          {
-            password:
-              password.value,
-          }
-        );
+    setTimeout(() => {
+      router.push("/dangnhap");
+    }, 2000);
 
-      message.value =
-        res.data.message;
+  } catch (err) {
 
-      setTimeout(() => {
-        router.push(
-          "/dangnhap"
-        );
-      }, 2000);
-    } catch (err) {
-      error.value =
-        err.response?.data
-          ?.message ||
-        "Có lỗi xảy ra";
-    } finally {
-      loading.value = false;
-    }
-  };
+    error.value =
+      err.response?.data?.message ||
+      "Đặt lại mật khẩu thất bại";
+
+  }
+
+  loading.value = false;
+
+};
 </script>
 
 <style scoped>
-.container {
-  min-height: 100vh;
-  background: #f5f5f5;
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.container{
+  min-height:80vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-.box {
-  width: 450px;
-  background: white;
-  padding: 50px;
-  border-radius: 20px;
-  box-shadow:
-    0 5px 20px
-      rgba(0, 0, 0, 0.1);
+.card{
+  width:420px;
+  padding:35px;
+  border-radius:15px;
+  box-shadow:0 5px 20px #ddd;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
+h2{
+  text-align:center;
+  margin-bottom:25px;
 }
 
-input {
-  width: 100%;
-  padding: 15px;
-  margin-bottom: 20px;
-
-  border: 1px solid #ddd;
-  border-radius: 12px;
-
-  font-size: 16px;
-  box-sizing: border-box;
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:15px;
+  border:1px solid #ddd;
+  border-radius:10px;
 }
 
-button {
-  width: 100%;
-  padding: 15px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: black;
-  color: white;
-
-  font-size: 17px;
-  cursor: pointer;
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:black;
+  color:white;
+  cursor:pointer;
 }
 
-button:disabled {
-  background: gray;
+button:hover{
+  background:#333;
 }
 
-.success {
-  margin-top: 20px;
-  color: green;
-  text-align: center;
+.success{
+  color:green;
+  margin-top:15px;
 }
 
-.error {
-  margin-top: 20px;
-  color: red;
-  text-align: center;
+.error{
+  color:red;
+  margin-top:15px;
 }
+
+a{
+  display:block;
+  text-align:center;
+  margin-top:20px;
+}
+
 </style>

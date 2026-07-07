@@ -1,6 +1,6 @@
 <template>
-  <nav class="navbar">
-    <!-- Logo -->
+  <header class="navbar">
+
     <RouterLink
       to="/"
       class="logo"
@@ -8,17 +8,8 @@
       DAT MOBILE
     </RouterLink>
 
-    <!-- Tìm kiếm -->
-    <div class="search">
-      <input
-        type="text"
-        placeholder="🔍 Tìm điện thoại..."
-        v-model="timKiemStore.tuKhoa"
-      />
-    </div>
+    <nav>
 
-    <!-- Menu -->
-    <div class="menu">
       <RouterLink to="/">
         Trang chủ
       </RouterLink>
@@ -27,201 +18,252 @@
         Sản phẩm
       </RouterLink>
 
+      <RouterLink to="/giohang">
+        Giỏ hàng
+      </RouterLink>
+
+      <RouterLink to="/LichSuDonHang">
+        Đơn hàng
+      </RouterLink>
+
       <RouterLink to="/lienhe">
         Liên hệ
       </RouterLink>
 
-      <RouterLink
-        to="/giohang"
-        class="cart"
-      >
-        🛒 Giỏ hàng
+    </nav>
 
-        <span
-          v-if="soLuong > 0"
-          class="badge"
-        >
-          {{ soLuong }}
-        </span>
+    <div class="right">
+
+      <input
+        v-model="keyword"
+        placeholder="Tìm sản phẩm..."
+      />
+
+      <button
+        @click="search"
+      >
+        🔍
+      </button>
+
+      <RouterLink
+        v-if="!user"
+        to="/dangnhap"
+      >
+        Đăng nhập
       </RouterLink>
 
-      <!-- Đã đăng nhập -->
-      <template v-if="user">
-        <RouterLink to="/hosocanhan">
-          Xin chào, {{ user.name }}
+      <div
+        v-else
+        class="user"
+      >
+
+        <span>
+
+          {{ user.name }}
+
+        </span>
+
+        <RouterLink
+          to="/hosocanhan"
+        >
+          Hồ sơ
         </RouterLink>
 
         <RouterLink
-          v-if="user.role === 'admin'"
+          v-if="user.role==='admin'"
           to="/admin"
         >
-          Quản trị
+          Admin
         </RouterLink>
 
-        <a
-          href="#"
-          @click.prevent="dangXuat"
+        <button
+          @click="logout"
         >
           Đăng xuất
-        </a>
-      </template>
+        </button>
 
-      <!-- Chưa đăng nhập -->
-      <template v-else>
-        <RouterLink to="/dangnhap">
-          Đăng nhập
-        </RouterLink>
+      </div>
 
-        <RouterLink to="/dangky">
-          Đăng ký
-        </RouterLink>
-      </template>
     </div>
-  </nav>
+
+  </header>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRouter } from "vue-router";
-import { giohang } from "../stores/giohang";
-import { useTimKiemStore } from "../stores/timkiem";
+import {
+ref,
+} from "vue";
 
-const router = useRouter();
-const timKiemStore = useTimKiemStore();
+import {
+useRouter,
+} from "vue-router";
 
-const user = computed(() => {
-  const data = localStorage.getItem("user");
-  return data ? JSON.parse(data) : null;
-});
+import {
+useTimKiemStore,
+} from "../stores/timkiem";
 
-const soLuong = computed(() => {
-  return giohang.reduce(
-    (tong, sp) => tong + (sp.soluong || 1),
-    0
-  );
-});
+const router=
+useRouter();
 
-function dangXuat() {
-  localStorage.removeItem("user");
-  router.push("/dangnhap");
-}
+const store=
+useTimKiemStore();
+
+const keyword=
+ref(store.tuKhoa);
+
+const user=
+JSON.parse(
+localStorage.getItem("user")
+);
+
+const search=()=>{
+
+store.tuKhoa=
+keyword.value;
+
+router.push(
+"/sanpham"
+);
+
+};
+
+const logout=()=>{
+
+localStorage.removeItem(
+"token"
+);
+
+localStorage.removeItem(
+"user"
+);
+
+location.href="/";
+
+};
 </script>
 
 <style scoped>
-.navbar {
-  background: #000;
-  color: white;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 30px;
+.navbar{
 
-  padding: 20px 50px;
+height:70px;
+
+background:#111827;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:0 40px;
+
 }
 
-.logo {
-  color: white;
-  text-decoration: none;
-  font-size: 34px;
-  font-weight: bold;
-  white-space: nowrap;
+.logo{
+
+font-size:28px;
+
+font-weight:bold;
+
+color:white;
+
+text-decoration:none;
+
 }
 
-.search {
-  flex: 1;
-  display: flex;
-  justify-content: center;
+nav{
+
+display:flex;
+
+gap:30px;
+
 }
 
-.search input {
-  width: 100%;
-  max-width: 500px;
+nav a{
 
-  padding: 14px 22px;
+color:white;
 
-  border: none;
-  border-radius: 30px;
-  outline: none;
+text-decoration:none;
 
-  font-size: 16px;
 }
 
-.menu {
-  display: flex;
-  align-items: center;
-  gap: 30px;
+.right{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
 }
 
-.menu a {
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  transition: 0.3s;
-  cursor: pointer;
+input{
+
+padding:10px;
+
+border-radius:8px;
+
+border:none;
+
+width:220px;
+
 }
 
-.menu a:hover {
-  color: #9ca3af;
+button{
+
+padding:10px 15px;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
 }
 
-.cart {
-  position: relative;
+.user{
+
+display:flex;
+
+gap:15px;
+
+align-items:center;
+
+color:white;
+
 }
 
-.badge {
-  position: absolute;
-  top: -10px;
-  right: -16px;
+.user a{
 
-  width: 22px;
-  height: 22px;
+color:white;
 
-  background: red;
-  color: white;
+text-decoration:none;
 
-  border-radius: 50%;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 13px;
-  font-weight: bold;
 }
 
-/* Tablet */
-@media (max-width: 1200px) {
-  .navbar {
-    flex-direction: column;
-  }
+@media(max-width:900px){
 
-  .search {
-    width: 100%;
-  }
+.navbar{
 
-  .menu {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+flex-direction:column;
+
+height:auto;
+
+padding:20px;
+
+gap:20px;
+
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .logo {
-    font-size: 28px;
-  }
+nav{
 
-  .menu {
-    gap: 18px;
-  }
+flex-wrap:wrap;
 
-  .menu a {
-    font-size: 16px;
-  }
+justify-content:center;
 
-  .search input {
-    max-width: 100%;
-  }
 }
+
+}
+
 </style>

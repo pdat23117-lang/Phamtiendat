@@ -1,55 +1,39 @@
 <template>
-  <div class="container">
-    <div class="box">
-      <h1>Đăng nhập</h1>
+  <div class="login">
+    <div class="card">
+      <h2>Đăng nhập</h2>
 
       <form @submit.prevent="dangNhap">
         <input
           v-model="email"
           type="email"
-          placeholder="Nhập email"
+          placeholder="Email"
+          required
         />
 
         <input
           v-model="password"
           type="password"
-          placeholder="Nhập mật khẩu"
+          placeholder="Mật khẩu"
+          required
         />
 
-        <button
-          :disabled="loading"
-        >
-          {{
-            loading
-              ? "Đang đăng nhập..."
-              : "Đăng nhập"
-          }}
+        <button :disabled="loading">
+          {{ loading ? "Đang đăng nhập..." : "Đăng nhập" }}
         </button>
       </form>
 
-      <p
-        v-if="error"
-        class="error"
-      >
+      <p class="error" v-if="error">
         {{ error }}
       </p>
 
-      <RouterLink
-        to="/quenmatkhau"
-        class="forgot"
-      >
+      <RouterLink to="/quenmatkhau">
         Quên mật khẩu?
       </RouterLink>
 
-      <p class="register">
-        Chưa có tài khoản?
-
-        <RouterLink
-          to="/dangky"
-        >
-          Đăng ký ngay
-        </RouterLink>
-      </p>
+      <RouterLink to="/dangky">
+        Chưa có tài khoản? Đăng ký
+      </RouterLink>
     </div>
   </div>
 </template>
@@ -63,146 +47,100 @@ const router = useRouter();
 
 const email = ref("");
 const password = ref("");
-const error = ref("");
+
 const loading = ref(false);
+const error = ref("");
 
 const dangNhap = async () => {
+  loading.value = true;
   error.value = "";
 
-  if (!email.value) {
-    error.value =
-      "Vui lòng nhập email";
-    return;
-  }
-
-  if (!password.value) {
-    error.value =
-      "Vui lòng nhập mật khẩu";
-    return;
-  }
-
   try {
-    loading.value = true;
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      {
+        email: email.value,
+        password: password.value,
+      }
+    );
 
-    const res =
-      await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email:
-            email.value,
-          password:
-            password.value,
-        }
-      );
+    localStorage.setItem(
+      "token",
+      res.data.token
+    );
 
     localStorage.setItem(
       "user",
-      JSON.stringify(
-        res.data
-      )
+      JSON.stringify(res.data.user)
     );
 
-    alert(
-      "Đăng nhập thành công"
-    );
-
-    router.push("/");
+    if (
+      res.data.user.role === "admin"
+    ) {
+      router.push("/admin");
+    } else {
+      router.push("/");
+    }
   } catch (err) {
     error.value =
-      err.response?.data
-        ?.message ||
+      err.response?.data?.message ||
       "Đăng nhập thất bại";
-  } finally {
-    loading.value = false;
   }
+
+  loading.value = false;
 };
-if (localStorage.getItem("user")) {
-  router.push("/");
-}
 </script>
 
 <style scoped>
-.container {
-  min-height: 100vh;
-  background: #f5f5f5;
-
+.login {
+  min-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.box {
-  width: 450px;
-  background: white;
-  padding: 50px;
-  border-radius: 20px;
-  box-shadow:
-    0 5px 20px
-      rgba(
-        0,
-        0,
-        0,
-        0.1
-      );
+.card {
+  width: 420px;
+  padding: 35px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px #ddd;
 }
 
-h1 {
+h2 {
   text-align: center;
-  margin-bottom: 35px;
+  margin-bottom: 25px;
 }
 
 input {
   width: 100%;
-  padding: 15px;
-  margin-bottom: 20px;
-
+  padding: 14px;
+  margin-bottom: 15px;
+  border-radius: 10px;
   border: 1px solid #ddd;
-  border-radius: 12px;
-
-  font-size: 16px;
-  box-sizing: border-box;
 }
 
 button {
   width: 100%;
-  padding: 15px;
-
-  border: none;
-  border-radius: 12px;
-
+  padding: 14px;
   background: black;
   color: white;
-
-  font-size: 17px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
 }
 
-button:disabled {
-  background: gray;
+button:hover {
+  background: #333;
 }
 
 .error {
-  margin-top: 20px;
   color: red;
-  text-align: center;
+  margin: 15px 0;
 }
 
-.forgot {
+a {
   display: block;
-  text-align: right;
-  margin-top: 20px;
-
-  text-decoration: none;
-  color: #2563eb;
-}
-
-.register {
-  margin-top: 35px;
+  margin-top: 12px;
   text-align: center;
-}
-
-.register a {
-  color: #2563eb;
-  text-decoration: none;
 }
 </style>
