@@ -92,16 +92,21 @@ const dangKy = async () => {
     );
 
     localStorage.setItem(
-      "token",
-      res.data.token
-    );
+  "token",
+  res.data.token
+);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
+localStorage.setItem(
+  "user",
+  JSON.stringify({
+    _id: res.data._id,
+    name: res.data.name,
+    email: res.data.email,
+    role: res.data.role,
+  })
+);
 
-    router.push("/");
+router.push("/");
 
   } catch (err) {
 

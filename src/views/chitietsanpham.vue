@@ -16,8 +16,12 @@
       <div class="left">
 
         <img
-          :src="product.hinh"
-        />
+  :src="product.hinh"
+  :alt="product.ten"
+  @error="
+    $event.target.src='/images/no-image.jpg'
+  "
+/>
 
       </div>
 
@@ -26,10 +30,38 @@
         <h1>
           {{ product.ten }}
         </h1>
+        <div class="rating-info">
+
+  <span class="star">
+    ⭐ {{ Number(product.averageRating || 0).toFixed(1) }}/5
+  </span>
+
+  <span class="count">
+    ({{ product.numReviews || 0 }} đánh giá)
+  </span>
+
+</div>
 
         <h2>
-          {{ product.gia?.toLocaleString() }} đ
+          {{ Number(product.gia || 0).toLocaleString("vi-VN") }} đ
         </h2>
+        <p
+  v-if="product.stock>0"
+  class="instock"
+>
+
+🟢 Còn hàng
+
+</p>
+
+<p
+  v-else
+  class="outstock"
+>
+
+🔴 Hết hàng
+
+</p>
 
         <table>
 
@@ -74,12 +106,17 @@
           </tr>
 
           <tr>
-
-            <td>Tồn kho</td>
-
-            <td>{{ product.stock }}</td>
-
-          </tr>
+  <td>Tồn kho</td>
+  <td>
+    {{ product.stock }}
+    <span
+      v-if="product.stock===0"
+      class="soldout"
+    >
+      (Hết hàng)
+    </span>
+  </td>
+</tr>
 
         </table>
 
@@ -97,19 +134,33 @@
           </span>
 
           <button
-            @click="quantity++"
-          >
-            +
-          </button>
+  @click="quantity++"
+  :disabled="
+product.stock===0 ||
+quantity>=product.stock
+"
+>
+  +
+</button>
 
         </div>
 
         <button
-          class="cart"
-          @click="addToCart"
-        >
+  class="cart"
+  @click="addToCart"
+  :disabled="product.stock===0"
+>
           Thêm vào giỏ hàng
         </button>
+        <button
+  class="buy"
+  @click="buyNow"
+  :disabled="product.stock===0"
+>
+
+Mua ngay
+
+</button>
 
       </div>
 
@@ -135,6 +186,14 @@
     >
 
       <h2>Đánh giá sản phẩm</h2>
+      <p
+  v-if="!product.reviews || product.reviews.length===0"
+  class="empty-review"
+>
+
+Chưa có đánh giá nào.
+
+</p>
 
       <div
         v-if="user"
@@ -179,10 +238,10 @@
       </div>
 
       <div
-        class="review-item"
-        v-for="item in product.reviews"
-        :key="item._id"
-      >
+  class="review-item"
+  v-for="item in product.reviews || []"
+  :key="item._id"
+>
 
         <h4>
 
@@ -239,10 +298,12 @@ onMounted,
 
 import {
 useRoute,
+useRouter,
 } from "vue-router";
 
 const route=
 useRoute();
+const router = useRouter();
 
 const token=
 localStorage.getItem(
@@ -285,6 +346,7 @@ await axios.get(
 
 product.value=
 res.data;
+quantity.value = 1;
 
 }
 catch(err){
@@ -298,16 +360,30 @@ loading.value=false;
 };
  const addToCart =
 async()=>{
+  if(!token){
 
-if(!token){
-
-alert(
-"Vui lòng đăng nhập"
-);
+alert("Vui lòng đăng nhập");
 
 return;
 
 }
+
+if(product.value.stock===0){
+
+alert("Sản phẩm đã hết hàng");
+
+return;
+
+}
+
+if(quantity.value>product.value.stock){
+
+alert("Số lượng vượt quá tồn kho");
+
+return;
+
+}
+
 
 try{
 
@@ -341,28 +417,48 @@ Authorization:
 alert(
 "Đã thêm vào giỏ hàng"
 );
+return true;
 
 }
 catch(err){
 
 alert(
-err.response?.data?.message
+err.response?.data?.message ||
+"Thêm vào giỏ thất bại"
 );
+
+return false;
 
 }
 
 };
+const buyNow = async()=>{
 
-const submitReview=
-async()=>{
+  const ok =
+  await addToCart();
+
+  if(ok){
+
+    router.push("/giohang");
+
+  }
+
+};
+
+const submitReview= async()=>{
+if(!token){
+
+  alert("Vui lòng đăng nhập");
+
+  return;
+
+}
 
 if(!comment.value){
 
-alert(
-"Vui lòng nhập nội dung đánh giá"
-);
+  alert("Vui lòng nhập nội dung đánh giá");
 
-return;
+  return;
 
 }
 
@@ -403,7 +499,7 @@ comment.value="";
 
 rating.value=5;
 
-loadProduct();
+await loadProduct();
 
 }
 catch(err){
@@ -538,6 +634,13 @@ margin-bottom:35px;
 .cart:hover{
 
 background:#000;
+
+}
+.cart:disabled{
+
+  background:#9ca3af;
+
+  cursor:not-allowed;
 
 }
 
@@ -832,5 +935,104 @@ padding:12px;
 }
 
 }
+.rating-info{
 
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+margin-bottom:15px;
+
+font-size:16px;
+
+}
+
+.star{
+
+color:#f59e0b;
+
+font-weight:bold;
+
+}
+
+.count{
+
+color:#666;
+
+}
+
+.instock{
+
+color:#16a34a;
+
+font-weight:bold;
+
+margin-bottom:20px;
+
+}
+
+.outstock{
+
+color:red;
+
+font-weight:bold;
+
+margin-bottom:20px;
+
+}
+
+.buy{
+
+width:100%;
+
+padding:16px;
+
+margin-top:15px;
+
+background:#dc2626;
+
+color:white;
+
+border:none;
+
+border-radius:10px;
+
+font-size:17px;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.buy:hover{
+
+background:#b91c1c;
+
+}
+
+.buy:disabled{
+
+background:#9ca3af;
+
+cursor:not-allowed;
+
+}
+.soldout{
+  color:red;
+  font-weight:bold;
+}
+.empty-review{
+
+text-align:center;
+
+padding:20px;
+
+color:#666;
+
+font-style:italic;
+
+}
 </style>

@@ -59,7 +59,7 @@
 
         <span>
 
-          {{ user.name }}
+          {{ user?.name }}
 
         </span>
 
@@ -92,6 +92,7 @@
 <script setup>
 import {
 ref,
+computed
 } from "vue";
 
 import {
@@ -111,10 +112,10 @@ useTimKiemStore();
 const keyword=
 ref(store.tuKhoa);
 
-const user=
-JSON.parse(
-localStorage.getItem("user")
-);
+const user = computed(() => {
+  const data = localStorage.getItem("user");
+  return data ? JSON.parse(data) : null;
+});
 
 const search=()=>{
 

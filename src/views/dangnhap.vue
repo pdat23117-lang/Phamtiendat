@@ -65,22 +65,27 @@ const dangNhap = async () => {
     );
 
     localStorage.setItem(
-      "token",
-      res.data.token
-    );
+  "token",
+  res.data.token
+);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
+const user = {
+  _id: res.data._id,
+  name: res.data.name,
+  email: res.data.email,
+  role: res.data.role,
+};
 
-    if (
-      res.data.user.role === "admin"
-    ) {
-      router.push("/admin");
-    } else {
-      router.push("/");
-    }
+localStorage.setItem(
+  "user",
+  JSON.stringify(user)
+);
+
+if (user.role === "admin") {
+    window.location.href="/admin";
+} else {
+    window.location.href="/";
+}
   } catch (err) {
     error.value =
       err.response?.data?.message ||

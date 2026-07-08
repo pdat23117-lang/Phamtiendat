@@ -3,23 +3,15 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
 
-const generateToken = (id) => {
-  return jwt.sign(
-    { id },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "30d",
-    }
-  );
-};
-
-// ===========================
+// =====================================
 // ĐĂNG KÝ
-// ===========================
+// =====================================
 
 const register = async (req, res) => {
+
   try {
 
     const {
@@ -33,43 +25,26 @@ const register = async (req, res) => {
       !email ||
       !password
     ) {
+
       return res.status(400).json({
-        success: false,
         message:
           "Vui lòng nhập đầy đủ thông tin",
       });
+
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Mật khẩu tối thiểu 6 ký tự",
-      });
-    }
-
-    const emailRegex =
-      /^\S+@\S+\.\S+$/;
-
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Email không hợp lệ",
-      });
-    }
-
-    const userExists =
+    const emailExists =
       await User.findOne({
         email,
       });
 
-    if (userExists) {
+    if (emailExists) {
+
       return res.status(400).json({
-        success: false,
         message:
           "Email đã được sử dụng",
       });
+
     }
 
     const hashedPassword =
@@ -80,23 +55,31 @@ const register = async (req, res) => {
 
     const user =
       await User.create({
-        name: name.trim(),
-        email:
-          email.toLowerCase(),
+
+        name,
+
+        email,
+
         password:
           hashedPassword,
+
       });
 
     res.status(201).json({
-      success: true,
+
       _id: user._id,
+
       name: user.name,
+
       email: user.email,
+
       role: user.role,
+
       token:
         generateToken(
           user._id
         ),
+
     });
 
   } catch (error) {
@@ -104,19 +87,24 @@ const register = async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-      success: false,
+
       message:
         "Lỗi server",
+
     });
 
   }
+
 };
 
-// ===========================
+// =====================================
 // ĐĂNG NHẬP
-// ===========================
+// =====================================
 
-const login = async (req, res) => {
+const login = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -125,54 +113,43 @@ const login = async (req, res) => {
       password,
     } = req.body;
 
-    if (
-      !email ||
-      !password
-    ) {
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Vui lòng nhập email và mật khẩu",
-      });
-
-    }
-
     const user =
       await User.findOne({
-        email:
-          email.toLowerCase(),
+        email,
       });
 
     if (!user) {
 
       return res.status(401).json({
-        success: false,
+
         message:
           "Email hoặc mật khẩu không đúng",
+
       });
 
     }
 
-    const isMatch =
+    const match =
       await bcrypt.compare(
+
         password,
+
         user.password
+
       );
 
-    if (!isMatch) {
+    if (!match) {
 
       return res.status(401).json({
-        success: false,
+
         message:
           "Email hoặc mật khẩu không đúng",
+
       });
 
     }
 
     res.json({
-
-      success: true,
 
       _id: user._id,
 
@@ -194,19 +171,23 @@ const login = async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-      success: false,
+
       message:
         "Lỗi server",
+
     });
 
   }
 
 };
-// ===========================
-// LẤY THÔNG TIN USER
-// ===========================
+// =====================================
+// LẤY HỒ SƠ CÁ NHÂN
+// =====================================
 
-const getMe = async (req, res) => {
+const getProfile = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -218,76 +199,41 @@ const getMe = async (req, res) => {
     if (!user) {
 
       return res.status(404).json({
-        success: false,
+
         message:
           "Không tìm thấy người dùng",
+
       });
 
     }
 
-    res.json({
-      success: true,
-      user,
-    });
+    res.json(user);
 
   } catch (error) {
 
     console.log(error);
 
     res.status(500).json({
-      success: false,
-      message: "Lỗi server",
+
+      message:
+        "Lỗi server",
+
     });
 
   }
 
 };
 
-// ===========================
-// LẤY DANH SÁCH USER
-// ===========================
-
-const getUsers = async (req, res) => {
-
-  try {
-
-    const users =
-      await User.find({})
-        .select("-password")
-        .sort({
-          createdAt: -1,
-        });
-
-    res.json(users);
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server",
-    });
-
-  }
-
-};
-
-// ===========================
+// =====================================
 // CẬP NHẬT HỒ SƠ
-// ===========================
+// =====================================
 
-const updateProfile =
-async (req, res) => {
+const updateProfile = async (
+  req,
+  res
+) => {
 
   try {
-
-    const {
-      name,
-      phone,
-      address,
-      avatar,
-    } = req.body;
 
     const user =
       await User.findById(
@@ -297,53 +243,47 @@ async (req, res) => {
     if (!user) {
 
       return res.status(404).json({
-        success: false,
+
         message:
           "Không tìm thấy người dùng",
+
       });
 
     }
 
-    if (name)
-      user.name = name.trim();
+    user.name =
+      req.body.name ||
+      user.name;
 
-    if (phone !== undefined)
-      user.phone = phone;
+    user.phone =
+      req.body.phone ??
+      user.phone;
 
-    if (address !== undefined)
-      user.address = address;
+    user.address =
+      req.body.address ??
+      user.address;
 
-    if (avatar !== undefined)
-      user.avatar = avatar;
+    user.avatar =
+      req.body.avatar ??
+      user.avatar;
 
     await user.save();
 
     res.json({
 
-      success: true,
+      _id: user._id,
 
-      message:
-        "Cập nhật thành công",
+      name: user.name,
 
-      user: {
+      email: user.email,
 
-        _id: user._id,
+      phone: user.phone,
 
-        name: user.name,
+      address: user.address,
 
-        email: user.email,
+      avatar: user.avatar,
 
-        phone: user.phone,
-
-        address:
-          user.address,
-
-        avatar:
-          user.avatar,
-
-        role: user.role,
-
-      },
+      role: user.role,
 
     });
 
@@ -352,30 +292,30 @@ async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-      success: false,
+
       message:
         "Lỗi server",
+
     });
 
   }
 
 };
 
-// ===========================
+// =====================================
 // ĐỔI MẬT KHẨU
-// ===========================
+// =====================================
 
-const changePassword =
-async (req, res) => {
+const changePassword = async (
+  req,
+  res
+) => {
 
   try {
 
     const {
-
       currentPassword,
-
       newPassword,
-
     } = req.body;
 
     if (
@@ -384,19 +324,10 @@ async (req, res) => {
     ) {
 
       return res.status(400).json({
-        success: false,
+
         message:
           "Vui lòng nhập đầy đủ thông tin",
-      });
 
-    }
-
-    if (newPassword.length < 6) {
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Mật khẩu mới tối thiểu 6 ký tự",
       });
 
     }
@@ -409,25 +340,30 @@ async (req, res) => {
     if (!user) {
 
       return res.status(404).json({
-        success: false,
+
         message:
           "Không tìm thấy người dùng",
+
       });
 
     }
 
-    const isMatch =
+    const match =
       await bcrypt.compare(
+
         currentPassword,
+
         user.password
+
       );
 
-    if (!isMatch) {
+    if (!match) {
 
       return res.status(400).json({
-        success: false,
+
         message:
           "Mật khẩu hiện tại không đúng",
+
       });
 
     }
@@ -454,45 +390,40 @@ async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-      success: false,
+
       message:
         "Lỗi server",
+
     });
 
   }
 
 };
-// ===========================
+// =====================================
 // QUÊN MẬT KHẨU
-// ===========================
+// =====================================
 
-const forgotPassword =
-async (req, res) => {
+const forgotPassword = async (
+  req,
+  res
+) => {
 
   try {
 
     const { email } = req.body;
 
-    if (!email) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng nhập email",
-      });
-
-    }
-
     const user =
       await User.findOne({
-        email: email.toLowerCase(),
+        email,
       });
 
     if (!user) {
 
       return res.json({
-        success: true,
+
         message:
-          "Nếu email tồn tại, hệ thống đã gửi liên kết đặt lại mật khẩu.",
+          "Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi.",
+
       });
 
     }
@@ -502,14 +433,11 @@ async (req, res) => {
         .randomBytes(32)
         .toString("hex");
 
-    const hashedToken =
+    user.resetPasswordToken =
       crypto
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
-
-    user.resetPasswordToken =
-      hashedToken;
 
     user.resetPasswordExpire =
       Date.now() +
@@ -519,23 +447,7 @@ async (req, res) => {
 
     const resetUrl =
 
-`${process.env.CLIENT_URL}/resetmatkhau/${resetToken}`;
-
-    const html = `
-
-      <h2>Đặt lại mật khẩu</h2>
-
-      <p>Xin chào ${user.name},</p>
-
-      <p>Nhấn vào liên kết dưới đây để đặt lại mật khẩu:</p>
-
-      <a href="${resetUrl}">
-        ${resetUrl}
-      </a>
-
-      <p>Liên kết có hiệu lực trong 15 phút.</p>
-
-    `;
+`${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     await sendEmail(
 
@@ -543,16 +455,26 @@ async (req, res) => {
 
       "Đặt lại mật khẩu DAT MOBILE",
 
-      html
+      `
+      <h2>Xin chào ${user.name}</h2>
+
+      <p>Bạn đã yêu cầu đặt lại mật khẩu.</p>
+
+      <p>Nhấn vào liên kết bên dưới:</p>
+
+      <a href="${resetUrl}">
+      ${resetUrl}
+      </a>
+
+      <p>Liên kết sẽ hết hạn sau 15 phút.</p>
+      `
 
     );
 
     res.json({
 
-      success: true,
-
       message:
-        "Liên kết đặt lại mật khẩu đã được gửi tới email.",
+        "Liên kết đặt lại mật khẩu đã được gửi.",
 
     });
 
@@ -562,9 +484,8 @@ async (req, res) => {
 
     res.status(500).json({
 
-      success: false,
-
-      message: "Lỗi server",
+      message:
+        "Lỗi server",
 
     });
 
@@ -572,12 +493,14 @@ async (req, res) => {
 
 };
 
-// ===========================
-// RESET PASSWORD
-// ===========================
+// =====================================
+// RESET MẬT KHẨU
+// =====================================
 
-const resetPassword =
-async (req, res) => {
+const resetPassword = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -607,36 +530,19 @@ async (req, res) => {
 
       return res.status(400).json({
 
-        success: false,
-
         message:
-          "Liên kết không hợp lệ hoặc đã hết hạn.",
+          "Liên kết không hợp lệ hoặc đã hết hạn",
 
       });
 
     }
 
-    const { password } =
-      req.body;
-
-    if (!password) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        message:
-          "Vui lòng nhập mật khẩu mới",
-
-      });
-
-    }
-
-    if (password.length < 6) {
+    if (
+      !req.body.password ||
+      req.body.password.length < 6
+    ) {
 
       return res.status(400).json({
-
-        success: false,
 
         message:
           "Mật khẩu tối thiểu 6 ký tự",
@@ -644,9 +550,10 @@ async (req, res) => {
       });
 
     }
-        user.password =
+
+    user.password =
       await bcrypt.hash(
-        password,
+        req.body.password,
         10
       );
 
@@ -673,7 +580,39 @@ async (req, res) => {
 
     res.status(500).json({
 
-      success: false,
+      message:
+        "Lỗi server",
+
+    });
+
+  }
+
+};
+// =====================================
+// LẤY DANH SÁCH NGƯỜI DÙNG (ADMIN)
+// =====================================
+
+const getAllUsers = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const users =
+      await User.find({})
+        .select("-password")
+        .sort({
+          createdAt: -1,
+        });
+
+    res.json(users);
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
 
       message:
         "Lỗi server",
@@ -684,12 +623,14 @@ async (req, res) => {
 
 };
 
-// ===========================
-// XÓA USER (ADMIN)
-// ===========================
+// =====================================
+// CẬP NHẬT QUYỀN NGƯỜI DÙNG
+// =====================================
 
-const deleteUser =
-async (req, res) => {
+const updateUserRole = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -702,144 +643,25 @@ async (req, res) => {
 
       return res.status(404).json({
 
-        success: false,
-
         message:
           "Không tìm thấy người dùng",
 
       });
 
     }
-
-    await user.deleteOne();
-
-    res.json({
-
-      success: true,
-
-      message:
-        "Đã xóa người dùng",
-
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-
-      success: false,
-
-      message:
-        "Lỗi server",
-
-    });
-
-  }
-
-};
-
-// ===========================
-// KHÓA / MỞ KHÓA USER
-// ===========================
-
-const toggleUserStatus =
-async (req, res) => {
-
-  try {
-
-    const user =
-      await User.findById(
-        req.params.id
-      );
-
-    if (!user) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message:
-          "Không tìm thấy người dùng",
-
-      });
-
-    }
-
-    user.isActive =
-      !user.isActive;
-
-    await user.save();
-
-    res.json({
-
-      success: true,
-
-      message:
-        user.isActive
-          ? "Đã mở khóa tài khoản"
-          : "Đã khóa tài khoản",
-
-      user,
-
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-
-      success: false,
-
-      message:
-        "Lỗi server",
-
-    });
-
-  }
-
-};
-// ===========================
-// CẬP NHẬT QUYỀN USER (ADMIN)
-// ===========================
-
-const updateUserRole =
-async (req, res) => {
-
-  try {
 
     const { role } =
       req.body;
 
     if (
-      !["user", "admin"].includes(role)
+      role !== "user" &&
+      role !== "admin"
     ) {
 
       return res.status(400).json({
 
-        success: false,
-
         message:
           "Quyền không hợp lệ",
-
-      });
-
-    }
-
-    const user =
-      await User.findById(
-        req.params.id
-      );
-
-    if (!user) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message:
-          "Không tìm thấy người dùng",
 
       });
 
@@ -856,7 +678,17 @@ async (req, res) => {
       message:
         "Cập nhật quyền thành công",
 
-      user,
+      user: {
+
+        _id: user._id,
+
+        name: user.name,
+
+        email: user.email,
+
+        role: user.role,
+
+      },
 
     });
 
@@ -865,8 +697,6 @@ async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-
-      success: false,
 
       message:
         "Lỗi server",
@@ -876,26 +706,25 @@ async (req, res) => {
   }
 
 };
+// =====================================
+// XÓA NGƯỜI DÙNG
+// =====================================
 
-// ===========================
-// TÌM USER THEO ID (ADMIN)
-// ===========================
-
-const getUserById =
-async (req, res) => {
+const deleteUser = async (
+  req,
+  res
+) => {
 
   try {
 
     const user =
       await User.findById(
         req.params.id
-      ).select("-password");
+      );
 
     if (!user) {
 
       return res.status(404).json({
-
-        success: false,
 
         message:
           "Không tìm thấy người dùng",
@@ -904,11 +733,25 @@ async (req, res) => {
 
     }
 
+    if (user.role === "admin") {
+
+      return res.status(400).json({
+
+        message:
+          "Không thể xóa tài khoản Admin",
+
+      });
+
+    }
+
+    await user.deleteOne();
+
     res.json({
 
       success: true,
 
-      user,
+      message:
+        "Xóa người dùng thành công",
 
     });
 
@@ -917,8 +760,6 @@ async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-
-      success: false,
 
       message:
         "Lỗi server",
@@ -934,23 +775,19 @@ module.exports = {
 
   login,
 
-  getMe,
+  forgotPassword,
 
-  getUsers,
+  resetPassword,
 
-  getUserById,
+  getProfile,
 
   updateProfile,
 
   changePassword,
 
-  forgotPassword,
-
-  resetPassword,
+  getAllUsers,
 
   updateUserRole,
-
-  toggleUserStatus,
 
   deleteUser,
 

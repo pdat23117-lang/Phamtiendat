@@ -3,28 +3,35 @@ const admin = (
   res,
   next
 ) => {
-  if (
-    !req.user
-  ) {
+
+  if (!req.user) {
+
     return res.status(401).json({
+
       success: false,
+
       message:
-        "Chưa đăng nhập",
+        "Chưa xác thực người dùng",
+
     });
+
   }
 
-  if (
-    req.user.role !==
-    "admin"
-  ) {
+  if (req.user.role !== "admin") {
+
     return res.status(403).json({
+
       success: false,
+
       message:
         "Bạn không có quyền truy cập",
+
     });
+
   }
 
   next();
+
 };
 
 module.exports = {
