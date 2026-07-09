@@ -129,7 +129,7 @@ try{
 
 await axios.post(
 
-"http://localhost:5000/api/cart",
+"/cart",
 
 {
 

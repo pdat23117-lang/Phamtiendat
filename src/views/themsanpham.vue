@@ -120,7 +120,7 @@ async()=>{
 try{
 
 await axios.post(
-"http://localhost:5000/api/sanpham",
+"/sanpham",
 product.value,
 {
 headers:{

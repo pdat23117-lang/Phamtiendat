@@ -163,12 +163,12 @@ const router = createRouter({
 
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
+
+  const data = localStorage.getItem("user");
 
   const user =
-    JSON.parse(
-      localStorage.getItem("user")
-    );
+    data ? JSON.parse(data) : null;
 
   if (
     to.path.startsWith("/admin")
@@ -179,13 +179,11 @@ router.beforeEach((to, from, next) => {
       user.role !== "admin"
     ) {
 
-      return next("/dangnhap");
+      return "/dangnhap";
 
     }
 
   }
-
-  next();
 
 });
 

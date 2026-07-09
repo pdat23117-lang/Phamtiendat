@@ -98,7 +98,7 @@ const guiLienHe = async () => {
 
     const res =
       await axios.post(
-        "http://localhost:5000/api/lienhe",
+        "/lienhe",
         form.value
       );
 

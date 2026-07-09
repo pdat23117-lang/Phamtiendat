@@ -184,10 +184,7 @@ useRouter,
 const router=
 useRouter();
 
-const token=
-localStorage.getItem(
-"token"
-);
+
 
 const cart=
 ref({
@@ -204,13 +201,8 @@ try{
 
 const res=
 await axios.get(
-"http://localhost:5000/api/cart",
-{
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
-}
+"/cart",
+
 );
 
 cart.value=
@@ -267,18 +259,13 @@ try{
 
 await axios.put(
 
-`http://localhost:5000/api/cart/${item.sanpham._id}`,
+`/cart/${item.sanpham._id}`,
 
 {
 soluong:qty,
 },
 
-{
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
-}
+
 
 );
 
@@ -309,14 +296,9 @@ try{
 
 await axios.delete(
 
-`http://localhost:5000/api/cart/${item.sanpham._id}`,
+`/cart/${item.sanpham._id}`,
 
-{
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
-}
+
 
 );
 
@@ -347,14 +329,9 @@ try{
 
 await axios.delete(
 
-"http://localhost:5000/api/cart",
+"/cart",
 
-{
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
-}
+
 
 );
 

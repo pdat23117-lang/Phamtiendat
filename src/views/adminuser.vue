@@ -92,7 +92,7 @@ const loadUsers = async () => {
 
     const res =
     await axios.get(
-      "http://localhost:5000/api/auth/users",
+      "/auth/users",
       {
         headers:{
           Authorization:
@@ -119,7 +119,7 @@ async(user)=>{
   try{
 
     await axios.put(
-      `http://localhost:5000/api/auth/users/${user._id}/role`,
+      `/auth/users/${user._id}/role`,
       {
         role:user.role,
       },
@@ -157,7 +157,7 @@ async(id)=>{
   try{
 
     await axios.delete(
-      `http://localhost:5000/api/auth/users/${id}`,
+      `/auth/users/${id}`,
       {
         headers:{
           Authorization:

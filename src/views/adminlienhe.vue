@@ -120,7 +120,7 @@ try{
 
 const res=
 await axios.get(
-"http://localhost:5000/api/lienhe/admin",
+"/lienhe/admin",
 {
 headers:{
 Authorization:
@@ -147,7 +147,7 @@ async(item)=>{
 try{
 
 await axios.put(
-`http://localhost:5000/api/lienhe/admin/${item._id}`,
+`/lienhe/admin/${item._id}`,
 {
 trangThai:
 item.trangThai,
@@ -184,7 +184,7 @@ return;
 try{
 
 await axios.delete(
-`http://localhost:5000/api/lienhe/admin/${id}`,
+`/lienhe/admin/${id}`,
 {
 headers:{
 Authorization:

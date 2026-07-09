@@ -300,22 +300,14 @@ import {
 useRoute,
 useRouter,
 } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
 const route=
 useRoute();
 const router = useRouter();
 
-const token=
-localStorage.getItem(
-"token"
-);
 
-const user=
-JSON.parse(
-localStorage.getItem(
-"user"
-)
-);
+const auth = useAuthStore();
 
 const loading=
 ref(true);
@@ -338,11 +330,7 @@ async()=>{
 try{
 
 const res=
-await axios.get(
-
-`http://localhost:5000/api/sanpham/${route.params.id}`
-
-);
+await axios.get(`/sanpham/${route.params.id}`);
 
 product.value=
 res.data;
@@ -360,7 +348,7 @@ loading.value=false;
 };
  const addToCart =
 async()=>{
-  if(!token){
+  if(!auth.token){
 
 alert("Vui lòng đăng nhập");
 
@@ -388,30 +376,11 @@ return;
 try{
 
 await axios.post(
-
-"http://localhost:5000/api/cart",
-
-{
-
-productId:
-product.value._id,
-
-soluong:
-quantity.value,
-
-},
-
-{
-
-headers:{
-
-Authorization:
-`Bearer ${token}`,
-
-},
-
-}
-
+  "/cart",
+  {
+    productId: product.value._id,
+    soluong: quantity.value,
+  }
 );
 
 alert(
@@ -446,7 +415,7 @@ const buyNow = async()=>{
 };
 
 const submitReview= async()=>{
-if(!token){
+if(!auth.token){
 
   alert("Vui lòng đăng nhập");
 
@@ -465,30 +434,11 @@ if(!comment.value){
 try{
 
 await axios.post(
-
-`http://localhost:5000/api/sanpham/${product.value._id}/reviews`,
-
-{
-
-rating:
-rating.value,
-
-comment:
-comment.value,
-
-},
-
-{
-
-headers:{
-
-Authorization:
-`Bearer ${token}`,
-
-},
-
-}
-
+  `/sanpham/${product.value._id}/reviews`,
+  {
+    rating: rating.value,
+    comment: comment.value,
+  }
 );
 
 alert(

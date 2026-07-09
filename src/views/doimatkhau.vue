@@ -81,25 +81,13 @@ const doiMatKhau = async () => {
 
   try {
 
-    const token =
-      localStorage.getItem("token");
+    
 
     const res =
       await axios.put(
-        "http://localhost:5000/api/auth/change-password",
-        {
-          oldPassword:
-            oldPassword.value,
-          newPassword:
-            newPassword.value,
-        },
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
+  "/auth/change-password",
+  data
+);
 
     success.value =
       res.data.message;

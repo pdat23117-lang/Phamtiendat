@@ -46,7 +46,7 @@
       </button>
 
       <RouterLink
-        v-if="!user"
+        v-if="!auth.user"
         to="/dangnhap"
       >
         Đăng nhập
@@ -59,7 +59,7 @@
 
         <span>
 
-          {{ user?.name }}
+          {{ auth.user.name }}
 
         </span>
 
@@ -70,7 +70,7 @@
         </RouterLink>
 
         <RouterLink
-          v-if="user.role==='admin'"
+          v-if="auth.user.role==='admin'"
           to="/admin"
         >
           Admin
@@ -92,7 +92,6 @@
 <script setup>
 import {
 ref,
-computed
 } from "vue";
 
 import {
@@ -112,10 +111,9 @@ useTimKiemStore();
 const keyword=
 ref(store.tuKhoa);
 
-const user = computed(() => {
-  const data = localStorage.getItem("user");
-  return data ? JSON.parse(data) : null;
-});
+import { useAuthStore } from "../stores/auth";
+import axios from "axios";
+const auth = useAuthStore();
 
 const search=()=>{
 
@@ -128,17 +126,13 @@ router.push(
 
 };
 
-const logout=()=>{
+const logout = () => {
 
-localStorage.removeItem(
-"token"
-);
+  auth.logout();
 
-localStorage.removeItem(
-"user"
-);
+  delete axios.defaults.headers.common.Authorization;
 
-location.href="/";
+  router.push("/");
 
 };
 </script>

@@ -129,7 +129,7 @@ async()=>{
 
     const res =
     await axios.get(
-      "http://localhost:5000/api/sanpham"
+      "/sanpham"
     );
 
     products.value =
@@ -172,7 +172,7 @@ async(id)=>{
   try{
 
     await axios.delete(
-      `http://localhost:5000/api/sanpham/${id}`,
+      `/sanpham/${id}`,
       {
         headers:{
           Authorization:

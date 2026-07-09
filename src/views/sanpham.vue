@@ -89,7 +89,7 @@ v-for="sp in pageProducts"
 
 <h2>
 
-{{ sp.gia.toLocaleString() }} đ
+{{ Number(sp.gia || 0).toLocaleString("vi-VN") }} đ
 
 </h2>
 
@@ -199,7 +199,7 @@ const res=
 
 await axios.get(
 
-"http://localhost:5000/api/sanpham"
+"/sanpham"
 
 );
 

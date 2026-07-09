@@ -186,7 +186,7 @@ try{
 
 const res=
 await axios.get(
-"http://localhost:5000/api/cart",
+"/cart",
 {
 headers:{
 Authorization:
@@ -261,7 +261,7 @@ const res=
 
 await axios.post(
 
-"http://localhost:5000/api/dathang",
+"/dathang",
 
 {
 
@@ -296,7 +296,7 @@ res.data.message
 
 await axios.delete(
 
-"http://localhost:5000/api/cart",
+"/cart",
 
 {
 

@@ -58,8 +58,9 @@
 import axios from "axios";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-
+import { useAuthStore } from "../stores/auth";
 const router = useRouter();
+const auth = useAuthStore();
 
 const name = ref("");
 const email = ref("");
@@ -83,28 +84,16 @@ const dangKy = async () => {
   try {
 
     const res = await axios.post(
-      "http://localhost:5000/api/auth/register",
-      {
-        name: name.value,
-        email: email.value,
-        password: password.value,
-      }
-    );
+"/auth/register", {
+  name: name.value,
+  email: email.value,
+  password: password.value,
+});
 
-    localStorage.setItem(
-  "token",
-  res.data.token
-);
+    auth.login(res.data);
 
-localStorage.setItem(
-  "user",
-  JSON.stringify({
-    _id: res.data._id,
-    name: res.data.name,
-    email: res.data.email,
-    role: res.data.role,
-  })
-);
+axios.defaults.headers.common.Authorization =
+  `Bearer ${res.data.token}`;
 
 router.push("/");
 

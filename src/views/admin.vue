@@ -130,7 +130,7 @@ const loadDashboard = async () => {
 
     const product =
       await axios.get(
-        "http://localhost:5000/api/sanpham"
+        "/sanpham"
       );
 
     thongKe.value.products =
@@ -138,7 +138,7 @@ const loadDashboard = async () => {
 
     const user =
       await axios.get(
-        "http://localhost:5000/api/auth/users",
+        "/auth/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -151,7 +151,7 @@ const loadDashboard = async () => {
 
     const order =
       await axios.get(
-        "http://localhost:5000/api/dathang/admin/all",
+        "/dathang/admin/all",
         {
           headers: {
             Authorization: `Bearer ${token}`,

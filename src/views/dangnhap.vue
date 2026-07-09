@@ -42,9 +42,9 @@
 import axios from "axios";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-
+import { useAuthStore } from "../stores/auth";
 const router = useRouter();
-
+const auth = useAuthStore();
 const email = ref("");
 const password = ref("");
 
@@ -52,47 +52,45 @@ const loading = ref(false);
 const error = ref("");
 
 const dangNhap = async () => {
+
   loading.value = true;
   error.value = "";
 
   try {
+
     const res = await axios.post(
-      "http://localhost:5000/api/auth/login",
-      {
-        email: email.value,
-        password: password.value,
-      }
-    );
-
-    localStorage.setItem(
-  "token",
-  res.data.token
+"/auth/login",
+  {
+    email: email.value,
+    password: password.value,
+  }
 );
 
-const user = {
-  _id: res.data._id,
-  name: res.data.name,
-  email: res.data.email,
-  role: res.data.role,
-};
+auth.login(res.data);
 
-localStorage.setItem(
-  "user",
-  JSON.stringify(user)
-);
+axios.defaults.headers.common.Authorization =
+  `Bearer ${res.data.token}`;
 
-if (user.role === "admin") {
-    window.location.href="/admin";
+if (res.data.role === "admin") {
+
+  router.push("/admin");
+
 } else {
-    window.location.href="/";
+
+  router.push("/");
+
 }
+
   } catch (err) {
+
     error.value =
       err.response?.data?.message ||
       "Đăng nhập thất bại";
+
   }
 
   loading.value = false;
+
 };
 </script>
 

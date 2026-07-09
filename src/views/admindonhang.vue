@@ -181,7 +181,7 @@ try{
 const res=
 await axios.get(
 
-"http://localhost:5000/api/dathang/admin/all",
+"/dathang/admin/all",
 
 {
 headers:{
@@ -212,7 +212,7 @@ try{
 
 await axios.put(
 
-`http://localhost:5000/api/dathang/admin/${order._id}`,
+`/dathang/admin/${order._id}`,
 
 {
 status:

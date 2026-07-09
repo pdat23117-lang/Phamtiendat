@@ -55,7 +55,7 @@ import {
   ref,
   onMounted,
 } from "vue";
-
+import { useAuthStore } from "../stores/auth";
 const loading = ref(false);
 
 const success = ref("");
@@ -66,23 +66,15 @@ const user = ref({
   name: "",
   email: "",
 });
+const auth = useAuthStore();
 
-const token =
-  localStorage.getItem("token");
 
 const loadProfile = async () => {
   try {
 
-    const res =
-      await axios.get(
-        "http://localhost:5000/api/auth/profile",
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
+    const res = await axios.get(
+  "/auth/profile"
+);
 
     user.value = res.data;
 
@@ -104,24 +96,18 @@ const capNhat = async () => {
 
   try {
 
-    const res =
-      await axios.put(
-        "http://localhost:5000/api/auth/profile",
-        {
-          name: user.value.name,
-        },
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
+   const res =
+  await axios.put(
+    "/auth/profile",
+    {
+      name: user.value.name,
+    }
+  );
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data)
-    );
+    auth.user = {
+  ...auth.user,
+  ...res.data,
+};
 
     success.value =
       "Cập nhật thành công";
