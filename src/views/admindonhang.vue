@@ -53,20 +53,20 @@
 
           <td>
 
-            {{ order.shippingAddress.name }}
+            {{ order.shippingAddress.ten }}
 
           </td>
 
           <td>
 
-            {{ order.shippingAddress.phone }}
+            {{ order.shippingAddress.sodienthoai }}
 
           </td>
 
           <td>
 
             {{
-              order.totalPrice.toLocaleString()
+              order.thanhTien.toLocaleString()
             }}
             đ
 
@@ -198,11 +198,17 @@ res.data;
 }
 catch(err){
 
-console.log(err);
+console.log(err.response);
+
+console.log(err.response?.data);
 
 }
 
+finally{
+
 loading.value=false;
+
+}
 
 };
 const update =
@@ -211,8 +217,7 @@ async(order)=>{
 try{
 
 await axios.put(
-
-`/dathang/admin/${order._id}`,
+`/dathang/admin/${order._id}/status`,
 
 {
 status:
@@ -256,11 +261,11 @@ order.items.forEach(
 
 text+=
 
-`${index+1}. ${item.name}
+`${index+1}. ${item.ten}
 
-SL: ${item.quantity}
+SL: ${item.soluong}
 
-Giá: ${item.price.toLocaleString()} đ
+Giá: ${item.gia.toLocaleString()} đ
 
 --------------------
 
@@ -274,15 +279,15 @@ alert(
 
 `Khách hàng:
 
-${order.shippingAddress.name}
+${order.shippingAddress.ten}
 
 SĐT:
 
-${order.shippingAddress.phone}
+${order.shippingAddress.sodienthoai}
 
 Địa chỉ:
 
-${order.shippingAddress.address}
+${order.shippingAddress.diachi}
 
 -------------------------
 
@@ -290,7 +295,7 @@ ${text}
 
 Tổng tiền:
 
-${order.totalPrice.toLocaleString()} đ`
+${order.thanhTien.toLocaleString()} đ`
 
 );
 

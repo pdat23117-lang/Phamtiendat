@@ -73,7 +73,7 @@ try{
 
 const sp =
 await axios.get(
-"http://localhost:5000/api/sanpham"
+"/sanpham"
 );
 
 report.value.products =
@@ -81,7 +81,7 @@ sp.data.products.length;
 
 const us =
 await axios.get(
-"http://localhost:5000/api/auth/users",
+"/auth/users",
 {
 headers:{
 Authorization:`Bearer ${token}`
@@ -94,7 +94,7 @@ us.data.length;
 
 const od =
 await axios.get(
-"http://localhost:5000/api/dathang/admin/all",
+"/dathang/admin/all",
 {
 headers:{
 Authorization:`Bearer ${token}`

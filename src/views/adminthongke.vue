@@ -70,7 +70,7 @@ try{
 
 const sp=
 await axios.get(
-"http://localhost:5000/api/sanpham"
+"/sanpham"
 );
 
 products.value=
@@ -78,7 +78,7 @@ sp.data.products.length;
 
 const us=
 await axios.get(
-"http://localhost:5000/api/auth/users",
+"/auth/users",
 {
 headers:{
 Authorization:
@@ -92,7 +92,7 @@ us.data.length;
 
 const od=
 await axios.get(
-"http://localhost:5000/api/dathang/admin/all",
+"/dathang/admin/all",
 {
 headers:{
 Authorization:

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Product = require("../models/sanpham");
-
+const Order = require("../models/dathang");
 // Tìm sản phẩm theo ID
 const findProductById = async (id) => {
   if (!mongoose.Types.ObjectId.isValid(id)) return null;
@@ -230,6 +230,17 @@ const deleteProduct = async (req, res) => {
 const createReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
+    const daMua = await Order.findOne({
+  user: req.user._id,
+  status: "delivered",
+  "items.product": req.params.id,
+});
+
+if (!daMua) {
+  return res.status(400).json({
+    message: "Bạn chỉ được đánh giá sản phẩm đã mua và đã giao",
+  });
+}
 
     const product = await Product.findById(req.params.id);
 

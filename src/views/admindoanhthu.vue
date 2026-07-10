@@ -144,7 +144,7 @@ try{
 const res=
 await axios.get(
 
-"http://localhost:5000/api/dathang/admin/all",
+"/dathang/admin/all",
 
 {
 headers:{

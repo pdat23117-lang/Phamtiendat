@@ -181,19 +181,16 @@ ref("cod");
 
 const loadCart=
 async()=>{
+  const res = await axios.get("/cart");
+
+console.log("Cart API:", res.data);
+
+cart.value = res.data;
 
 try{
 
-const res=
-await axios.get(
-"/cart",
-{
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
-}
-);
+await axios.get("/cart");
+
 
 cart.value=
 res.data;
@@ -232,7 +229,7 @@ loading.value=true;
 
 try{
 
-const items=
+const items =
 
 cart.value.items.map(
 
@@ -241,17 +238,8 @@ cart.value.items.map(
 productId:
 item.sanpham._id,
 
-name:
-item.sanpham.ten,
-
-price:
-item.sanpham.gia,
-
-quantity:
+soluong:
 item.soluong,
-
-image:
-item.sanpham.hinh,
 
 })
 
@@ -267,13 +255,14 @@ await axios.post(
 
 items,
 
-total:
-tongTien.value,
-
-shipping,
+shippingAddress:
+shipping.value,
 
 paymentMethod:
 paymentMethod.value,
+
+note:
+shipping.value.ghichu,
 
 },
 
@@ -294,22 +283,7 @@ alert(
 res.data.message
 );
 
-await axios.delete(
-
-"/cart",
-
-{
-
-headers:{
-
-Authorization:
-`Bearer ${token}`,
-
-},
-
-}
-
-);
+await axios.delete("/cart");
 
 router.push(
 "/LichSuDonHang"
@@ -318,11 +292,15 @@ router.push(
 }
 catch(err){
 
+console.log(err.response);
+
+console.log(err.response?.data);
+
 alert(
 
-err.response?.data?.message||
+err.response?.data?.message ||
 
-"Đặt hàng thất bại"
+err.message
 
 );
 

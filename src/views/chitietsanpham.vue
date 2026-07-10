@@ -196,7 +196,7 @@ Chưa có đánh giá nào.
 </p>
 
       <div
-        v-if="user"
+        v-if="auth.user"
         class="review-form"
       >
 

@@ -27,7 +27,7 @@ import admindanhgia from "../views/admindanhgia.vue";
 import adminthongke from "../views/adminthongke.vue";
 import adminbaocao from "../views/adminbaocao.vue";
 import admindoanhthu from "../views/admindoanhthu.vue";
-
+import danhgia from "../views/danhgia.vue";
 import themsanpham from "../views/themsanpham.vue";
 import suasanpham from "../views/suasanpham.vue";
 
@@ -144,14 +144,18 @@ const routes = [
   },
 
   {
-    path: "/themsanpham",
+    path: "/them-san-pham",
     component: themsanpham,
   },
 
   {
-    path: "/suasanpham/:id",
+    path: "/sua-san-pham/:id",
     component: suasanpham,
   },
+  {
+  path: "/danhgia/:id",
+  component: danhgia,
+},
 
 ];
 

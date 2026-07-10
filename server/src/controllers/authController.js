@@ -101,84 +101,54 @@ const register = async (req, res) => {
 // ĐĂNG NHẬP
 // =====================================
 
-const login = async (
-  req,
-  res
-) => {
-
+const login = async (req, res) => {
   try {
 
-    const {
-      email,
-      password,
-    } = req.body;
+    const { email, password } = req.body;
 
-    const user =
-      await User.findOne({
-        email,
-      });
+    console.log("Email:", email);
+    console.log("Password:", password);
+
+    const user = await User.findOne({ email });
+
+    console.log("User:", user);
 
     if (!user) {
-
       return res.status(401).json({
-
-        message:
-          "Email hoặc mật khẩu không đúng",
-
+        message: "Không tìm thấy user",
       });
-
     }
 
-    const match =
-      await bcrypt.compare(
+    const match = await bcrypt.compare(
+      password,
+      user.password
+    );
 
-        password,
-
-        user.password
-
-      );
+    console.log("Match:", match);
 
     if (!match) {
-
       return res.status(401).json({
-
-        message:
-          "Email hoặc mật khẩu không đúng",
-
+        message: "Sai mật khẩu",
       });
-
     }
 
     res.json({
-
       _id: user._id,
-
       name: user.name,
-
       email: user.email,
-
       role: user.role,
-
-      token:
-        generateToken(
-          user._id
-        ),
-
+      token: generateToken(user._id),
     });
 
-  } catch (error) {
+  } catch (err) {
 
-    console.log(error);
+    console.log(err);
 
     res.status(500).json({
-
-      message:
-        "Lỗi server",
-
+      message: "Lỗi server",
     });
 
   }
-
 };
 // =====================================
 // LẤY HỒ SƠ CÁ NHÂN

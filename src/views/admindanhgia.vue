@@ -147,7 +147,7 @@ try{
 
 await axios.put(
 
-`http://localhost:5000/api/sanpham/admin/${review.productId}/reviews/${review._id}/reply`,
+`/sanpham/admin/${review.productId}/reviews/${review._id}/reply`,
 
 {
 reply:
@@ -192,7 +192,7 @@ try{
 
 await axios.delete(
 
-`http://localhost:5000/api/sanpham/admin/${review.productId}/reviews/${review._id}`,
+`/sanpham/admin/${review.productId}/reviews/${review._id}`,
 
 {
 headers:{

@@ -60,22 +60,22 @@
         <div
           class="item"
           v-for="sp in order.items"
-          :key="sp._id"
+          :key="sp.product"
         >
 
           <img
-            :src="sp.image"
-          />
+  :src="sp.hinh"
+/>
 
           <div class="info">
 
             <h4>
-              {{ sp.name }}
+              {{ sp.ten }}
             </h4>
 
             <p>
               SL:
-              {{ sp.quantity }}
+              {{ sp.soluong }}
             </p>
 
           </div>
@@ -84,8 +84,8 @@
 
             {{
               (
-                sp.price*
-                sp.quantity
+                sp.gia*
+                sp.soluong
               ).toLocaleString()
             }}
             đ
@@ -103,12 +103,17 @@
             <strong>
 
               {{
-                order.totalPrice.toLocaleString()
+                order.thanhTien.toLocaleString()
               }}
               đ
 
             </strong>
-
+<button
+v-if="order.status==='delivered'"
+@click="router.push(`/chitietsanpham/${sp.product}`)"
+>
+Đánh giá
+</button>
           </div>
 
           <button
@@ -121,6 +126,12 @@
           >
             Hủy đơn
           </button>
+          <button
+  v-if="order.status === 'delivered'"
+  @click="router.push('/danhgia/' + order._id)"
+>
+  Đánh giá
+</button>
 
         </div>
 
@@ -132,7 +143,9 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 import axios from "axios";
 
 import {
@@ -156,10 +169,10 @@ async()=>{
 
 try{
 
-const res=
+const res =
 await axios.get(
 
-"/dathang",
+"/dathang/my",
 
 {
 
@@ -176,7 +189,7 @@ Authorization:
 
 orders.value=
 res.data;
-
+console.log(res.data);
 }
 catch(err){
 
@@ -201,7 +214,7 @@ try{
 
 await axios.put(
 
-`http://localhost:5000/api/dathang/${id}/cancel`,
+`/dathang/${id}/cancel`,
 
 {},
 
