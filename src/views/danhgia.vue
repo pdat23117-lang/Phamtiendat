@@ -42,6 +42,8 @@ import {ref} from "vue";
 import {useRoute,useRouter} from "vue-router";
 
 const route=useRoute();
+console.log(route.params);
+console.log(route.params.productId);
 
 const router=useRouter();
 
@@ -51,39 +53,38 @@ const comment=ref("");
 
 const token=localStorage.getItem("token");
 
-const gui=async()=>{
+const gui = async () => {
 
-await axios.post(
+  try {
 
-"/danhgia",
+    await axios.post(
+
+`/sanpham/${route.params.productId}/reviews`,
 
 {
-
-order:route.params.orderId,
-
-product:route.params.productId,
-
-star:star.value,
-
-comment:comment.value,
-
+    rating: star.value,
+    comment: comment.value,
 },
 
 {
-
-headers:{
-
-Authorization:`Bearer ${token}`,
-
-},
-
+    headers:{
+        Authorization:`Bearer ${token}`,
+    },
 }
 
 );
 
-alert("Đánh giá thành công");
+    alert("Đánh giá thành công");
 
-router.push("/LichSuDonHang");
+    router.push("/LichSuDonHang");
+
+  } catch (err) {
+
+    console.log(err.response);
+
+    alert(err.response?.data?.message);
+
+  }
 
 };
 

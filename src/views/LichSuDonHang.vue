@@ -67,6 +67,7 @@
   :src="sp.hinh"
 />
 
+
           <div class="info">
 
             <h4>
@@ -87,10 +88,23 @@
                 sp.gia*
                 sp.soluong
               ).toLocaleString()
-            }}
-            đ
+            }}đ
+            
 
           </strong>
+          <button
+v-if="order.status==='delivered' && !reviewed[sp.product]"
+@click="router.push(`/danhgia/${sp.product}`)"
+>
+Đánh giá
+</button>
+
+<button
+v-if="order.status==='delivered' && reviewed[sp.product]"
+disabled
+>
+Đã đánh giá
+</button>
 
         </div>
 
@@ -108,12 +122,6 @@
               đ
 
             </strong>
-<button
-v-if="order.status==='delivered'"
-@click="router.push(`/chitietsanpham/${sp.product}`)"
->
-Đánh giá
-</button>
           </div>
 
           <button
@@ -126,12 +134,7 @@ v-if="order.status==='delivered'"
           >
             Hủy đơn
           </button>
-          <button
-  v-if="order.status === 'delivered'"
-  @click="router.push('/danhgia/' + order._id)"
->
-  Đánh giá
-</button>
+          
 
         </div>
 
@@ -163,6 +166,7 @@ ref(true);
 
 const orders=
 ref([]);
+const reviewed = ref({});
 
 const loadOrders=
 async()=>{
@@ -189,7 +193,26 @@ Authorization:
 
 orders.value=
 res.data;
+reviewed.value = {};
+
+for (const order of orders.value) {
+  for (const sp of order.items) {
+
+    const result = await axios.get(
+      `/sanpham/${sp.product}/check-review`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    reviewed.value[sp.product] =
+      result.data.reviewed;
+  }
+}
 console.log(res.data);
+console.log(res.data[0].items);
 }
 catch(err){
 

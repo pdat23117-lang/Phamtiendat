@@ -11,6 +11,7 @@ const {
   getAllReviews,
   replyReview,
   deleteReview,
+  checkReview,
 } = require("../controllers/sanpham");
 
 const { protect } = require("../middleware/auth");
@@ -91,6 +92,11 @@ router.delete(
   protect,
   admin,
   deleteProduct
+);
+router.get(
+  "/:id/check-review",
+  protect,
+  checkReview
 );
 
 module.exports = router;

@@ -153,7 +153,7 @@ const routes = [
     component: suasanpham,
   },
   {
-  path: "/danhgia/:id",
+  path: "/danhgia/:productId",
   component: danhgia,
 },
 

@@ -101,6 +101,7 @@
 
 <script setup>
 import axios from "axios";
+import Swal from "sweetalert2";
 
 import {
   ref,
@@ -160,42 +161,38 @@ const sua=(sp)=>{
 
 };
 
-const xoa=
-async(id)=>{
+const xoa = async (id) => {
 
-  if(
-    !confirm(
-      "Xóa sản phẩm?"
-    )
-  ) return;
+  const result = await Swal.fire({
+    title: "Xóa sản phẩm?",
+    text: "Bạn sẽ không thể khôi phục sau khi xóa!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+  });
 
-  try{
+  if (!result.isConfirmed) return;
 
-    await axios.delete(
-      `/sanpham/${id}`,
-      {
-        headers:{
-          Authorization:
-          `Bearer ${token}`,
-        },
-      }
-    );
+ await axios.delete(`/sanpham/${id}`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
-    loadData();
+  Swal.fire({
+    icon: "success",
+    title: "Đã xóa!",
+    text: "Sản phẩm đã được xóa.",
+    timer: 1500,
+    showConfirmButton: false,
+  });
 
-  }
-  catch(err){
-
-    alert(
-      err.response?.data?.message
-    );
-
-  }
-
+  loadData();
 };
-
 onMounted(loadData);
-
 </script>
 
 <style scoped>

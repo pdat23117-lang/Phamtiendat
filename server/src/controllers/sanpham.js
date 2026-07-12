@@ -159,6 +159,7 @@ const createProduct = async (req, res) => {
 
     res.status(201).json(product);
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: error.message,
     });
@@ -315,7 +316,30 @@ const getAllReviews = async (req, res) => {
     });
   }
 };
+const checkReview = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
 
+    if (!product) {
+      return res.status(404).json({
+        reviewed: false,
+      });
+    }
+
+    const reviewed = product.reviews.some(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+
+    res.json({
+      reviewed,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
 // ========================
 // ADMIN TRẢ LỜI
 // ========================
@@ -399,4 +423,5 @@ module.exports = {
   getAllReviews,
   replyReview,
   deleteReview,
+  checkReview,
 };

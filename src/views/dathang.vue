@@ -179,28 +179,21 @@ ghichu:"",
 const paymentMethod=
 ref("cod");
 
-const loadCart=
-async()=>{
-  const res = await axios.get("/cart");
+const loadCart = async () => {
 
-console.log("Cart API:", res.data);
+  try {
 
-cart.value = res.data;
+    const res = await axios.get("/cart");
 
-try{
+    console.log("Cart API:", res.data);
 
-await axios.get("/cart");
+    cart.value = res.data;
 
+  } catch (err) {
 
-cart.value=
-res.data;
+    console.log(err);
 
-}
-catch(err){
-
-console.log(err);
-
-}
+  }
 
 };
 const tongTien =
