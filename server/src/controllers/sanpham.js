@@ -23,14 +23,14 @@ const validateProduct = (gia, stock) => {
 // ========================
 // LẤY DANH SÁCH SẢN PHẨM
 // ========================
+// ========================
+// LẤY DANH SÁCH SẢN PHẨM
+// ========================
 const getProducts = async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 6;
-    const skip = (page - 1) * limit;
-
     const filter = {};
 
+    // Tìm kiếm
     if (req.query.search) {
       filter.ten = {
         $regex: req.query.search,
@@ -38,53 +38,36 @@ const getProducts = async (req, res) => {
       };
     }
 
+    // Lọc hãng
     if (req.query.hang) {
       filter.hang = req.query.hang;
     }
 
-    if (req.query.gia === "duoi20") {
-      filter.gia = { $lt: 20000000 };
-    }
+    // Lấy toàn bộ sản phẩm
+    const products = await Product.find(filter);
 
-    if (req.query.gia === "20-30") {
-      filter.gia = {
-        $gte: 20000000,
-        $lte: 30000000,
-      };
-    }
+    // Đảm bảo gia luôn là object JSON
+    const result = products.map((product) => {
+      const data = product.toObject();
 
-    if (req.query.gia === "tren30") {
-      filter.gia = {
-        $gt: 30000000,
-      };
-    }
+      if (data.gia instanceof Map) {
+        data.gia = Object.fromEntries(data.gia);
+      }
 
-    let query = Product.find(filter);
-
-    if (req.query.sort === "tang") {
-      query = query.sort({ gia: 1 });
-    }
-
-    if (req.query.sort === "giam") {
-      query = query.sort({ gia: -1 });
-    }
-
-    const total = await Product.countDocuments(filter);
-
-    const products = await query.skip(skip).limit(limit);
+      return data;
+    });
 
     res.json({
-      products,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / limit),
-        limit,
-      },
+      products: result,
+      total: result.length,
     });
+
   } catch (error) {
+    console.log("Lỗi getProducts:", error);
+
     res.status(500).json({
       message: "Lỗi server",
+      error: error.message,
     });
   }
 };

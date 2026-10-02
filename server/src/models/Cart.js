@@ -8,6 +8,19 @@ const CartItemSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Bộ nhớ khách hàng lựa chọn
+    bonho: {
+      type: String,
+      required: true,
+    },
+
+    // Màu khách hàng lựa chọn
+    mau: {
+      type: String,
+      required: true,
+    },
+
+    // Số lượng
     soluong: {
       type: Number,
       required: true,

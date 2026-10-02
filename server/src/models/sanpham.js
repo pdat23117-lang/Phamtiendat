@@ -4,102 +4,93 @@ const ProductSchema = new mongoose.Schema(
   {
     ten: {
       type: String,
-      required: true,
+      required: true
     },
 
-    gia: {
-      type: Number,
-      required: true,
-    },
+    // Giá theo từng dung lượng
+gia: {
+  type: mongoose.Schema.Types.Mixed,
+  required: true
+},
 
     hang: {
       type: String,
-      required: true,
+      required: true
     },
 
     hinh: {
       type: String,
-      required: true,
+      required: true
     },
 
-    ram: {
-      type: String,
-      default: "",
+    hinhAnh: {
+      type: [String],
+      default: []
     },
 
     bonho: {
-      type: String,
-      default: "",
+      type: [String],
+      default: []
     },
 
     mau: {
-      type: String,
-      default: "",
+      type: [String],
+      default: []
     },
 
     baohanh: {
       type: String,
-      default: "12 tháng",
+      default: "12 tháng"
     },
 
     mota: {
       type: String,
-      default: "",
+      default: ""
     },
 
     stock: {
       type: Number,
-      default: 10,
+      default: 10
     },
 
     noibat: {
       type: Boolean,
-      default: false,
+      default: false
     },
 
     reviews: [
       {
         user: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          ref: "User"
         },
-
         name: String,
-
-        rating: Number,
-
-        comment: String,
-
-        adminReply: {
-          type: String,
-          default: "",
+        rating: {
+          type: Number,
+          min: 1,
+          max: 5
         },
-
-        repliedAt: Date,
-
+        comment: String,
         createdAt: {
           type: Date,
-          default: Date.now,
-        },
-      },
+          default: Date.now
+        }
+      }
     ],
 
     averageRating: {
       type: Number,
-      default: 0,
+      default: 0
     },
 
     numReviews: {
       type: Number,
-      default: 0,
-    },
+      default: 0
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
-module.exports = mongoose.model(
-  "Product",
-  ProductSchema
-);
+module.exports = mongoose.model("Product", ProductSchema);

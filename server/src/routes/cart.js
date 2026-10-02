@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -11,23 +12,65 @@ const {
 
 const { protect } = require("../middleware/auth");
 
+
 // ==============================
-// Giỏ hàng của người dùng
+// GIỎ HÀNG CỦA NGƯỜI DÙNG
 // ==============================
 
+
+// ==============================
 // Lấy giỏ hàng
-router.get("/", protect, getCart);
+// GET /cart
+// ==============================
+router.get(
+  "/",
+  protect,
+  getCart
+);
 
+
+// ==============================
 // Thêm sản phẩm vào giỏ
-router.post("/", protect, addToCart);
+// POST /cart
+// ==============================
+router.post(
+  "/",
+  protect,
+  addToCart
+);
 
-// Cập nhật số lượng sản phẩm
-router.put("/:productId", protect, updateCart);
 
-// Xóa một sản phẩm khỏi giỏ
-router.delete("/:productId", protect, removeCartItem);
+// ==============================
+// Cập nhật số lượng
+// PUT /cart/item/:itemId
+// ==============================
+router.put(
+  "/item/:itemId",
+  protect,
+  updateCart
+);
 
+
+// ==============================
+// Xóa một dòng sản phẩm
+// DELETE /cart/item/:itemId
+// ==============================
+router.delete(
+  "/item/:itemId",
+  protect,
+  removeCartItem
+);
+
+
+// ==============================
 // Xóa toàn bộ giỏ hàng
-router.delete("/", protect, clearCart);
+// DELETE /cart
+// ==============================
+router.delete(
+  "/",
+  protect,
+  clearCart
+);
+
 
 module.exports = router;
