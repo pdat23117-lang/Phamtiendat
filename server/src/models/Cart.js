@@ -1,53 +1,59 @@
 const mongoose = require("mongoose");
 
-const CartItemSchema = new mongoose.Schema(
-  {
-    sanpham: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
+// ==============================
+// CART ITEM
+// ==============================
+const CartItemSchema = new mongoose.Schema({
 
-    // Bộ nhớ khách hàng lựa chọn
-    bonho: {
-      type: String,
-      required: true,
-    },
-
-    // Màu khách hàng lựa chọn
-    mau: {
-      type: String,
-      required: true,
-    },
-
-    // Số lượng
-    soluong: {
-      type: Number,
-      required: true,
-      default: 1,
-      min: 1,
-    },
+  sanpham: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true
   },
-  {
-    _id: false,
-  }
-);
 
-const CartSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      unique: true,
-    },
-
-    items: [CartItemSchema],
+  bonho: {
+    type: String,
+    required: true
   },
-  {
-    timestamps: true,
+
+  mau: {
+    type: String,
+    required: true
+  },
+
+  soluong: {
+    type: Number,
+    required: true,
+    default: 1,
+    min: 1
   }
-);
+
+  // KHÔNG thêm _id: false
+  // Mongoose sẽ tự tạo _id cho mỗi item
+});
+
+
+// ==============================
+// CART
+// ==============================
+const CartSchema = new mongoose.Schema({
+
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true
+  },
+
+  items: {
+    type: [CartItemSchema],
+    default: []
+  }
+
+}, {
+  timestamps: true
+});
+
 
 module.exports = mongoose.model(
   "Cart",

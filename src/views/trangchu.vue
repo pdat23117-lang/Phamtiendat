@@ -1,21 +1,100 @@
 <template>
-  <div>
+  <div class="home">
 
-    <Hero />
+    <!-- HERO -->
+<section class="hero-section">
 
+  <div class="hero-content">
+
+    <div class="hero-text">
+
+      <div class="badge">
+        📱 DAT MOBILE
+      </div>
+
+      <h1>
+        Điện thoại chính hãng
+        <br>
+        <span>Giá tốt mỗi ngày</span>
+      </h1>
+
+      <p>
+        Khám phá những mẫu iPhone mới nhất, chính hãng,
+        bảo hành uy tín và nhiều ưu đãi hấp dẫn tại DAT MOBILE.
+      </p>
+
+      <RouterLink
+        to="/sanpham"
+        class="hero-button"
+      >
+        Xem sản phẩm →
+      </RouterLink>
+
+      <div class="hero-features">
+
+        <div>
+          🚚
+          <strong>Giao hàng</strong>
+          <span>toàn quốc</span>
+        </div>
+
+        <div>
+          🛡️
+          <strong>Bảo hành</strong>
+          <span>chính hãng</span>
+        </div>
+
+        <div>
+          💳
+          <strong>Thanh toán</strong>
+          <span>linh hoạt</span>
+        </div>
+
+        <div>
+          🎧
+          <strong>Hỗ trợ</strong>
+          <span>24/7</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="hero-image">
+
+      <img
+        src="/images/banner.png"
+        alt="DAT MOBILE - iPhone chính hãng"
+      >
+
+    </div>
+
+  </div>
+
+</section>
+
+
+    <!-- SẢN PHẨM NỔI BẬT -->
     <section class="section">
 
       <div class="title">
 
-        <h2>Sản phẩm nổi bật</h2>
+        <div>
+          <span class="section-label">
+            KHÁM PHÁ
+          </span>
 
-        <RouterLink
-          to="/sanpham"
-        >
+          <h2>
+            Sản phẩm nổi bật
+          </h2>
+        </div>
+
+        <RouterLink to="/sanpham">
           Xem tất cả →
         </RouterLink>
 
       </div>
+
 
       <div
         v-if="loading"
@@ -23,6 +102,7 @@
       >
         Đang tải...
       </div>
+
 
       <div
         v-else
@@ -39,13 +119,19 @@
 
     </section>
 
+
+    <!-- DỊCH VỤ -->
     <section class="feature">
 
       <div class="box">
 
-        🚚
+        <div class="feature-icon">
+          🚚
+        </div>
 
-        <h3>Miễn phí vận chuyển</h3>
+        <h3>
+          Miễn phí vận chuyển
+        </h3>
 
         <p>
           Toàn quốc cho đơn từ
@@ -54,11 +140,16 @@
 
       </div>
 
+
       <div class="box">
 
-        🛡️
+        <div class="feature-icon">
+          🛡️
+        </div>
 
-        <h3>Bảo hành chính hãng</h3>
+        <h3>
+          Bảo hành chính hãng
+        </h3>
 
         <p>
           Cam kết 100% hàng chính hãng.
@@ -66,11 +157,16 @@
 
       </div>
 
+
       <div class="box">
 
-        💳
+        <div class="feature-icon">
+          💳
+        </div>
 
-        <h3>Thanh toán linh hoạt</h3>
+        <h3>
+          Thanh toán linh hoạt
+        </h3>
 
         <p>
           COD và chuyển khoản.
@@ -78,11 +174,16 @@
 
       </div>
 
+
       <div class="box">
 
-        ☎️
+        <div class="feature-icon">
+          ☎️
+        </div>
 
-        <h3>Hỗ trợ 24/7</h3>
+        <h3>
+          Hỗ trợ 24/7
+        </h3>
 
         <p>
           Luôn sẵn sàng hỗ trợ khách hàng.
@@ -95,189 +196,656 @@
   </div>
 </template>
 
+
 <script setup>
 
 import axios from "axios";
 
 import {
-ref,
-computed,
-onMounted,
+  ref,
+  computed,
+  onMounted
 } from "vue";
 
-import Hero from "../components/Hero.vue";
+import {
+  useRouter
+} from "vue-router";
 
 import ProductCard from "../components/ProductCard.vue";
 
-const loading=
-ref(true);
 
-const sanpham=
-ref([]);
+const router = useRouter();
 
-const loadData=
-async()=>{
+const loading = ref(true);
 
-try{
+const sanpham = ref([]);
 
-const res=
-await axios.get(
-"/sanpham"
-);
 
-sanpham.value=
-res.data.products;
+const loadData = async () => {
+  try {
+    const res = await axios.get("/sanpham", {
+      params: {
+        page: 1,
+        limit: 100
+      }
+    });
 
-}
-catch(err){
+    sanpham.value = res.data.products;
 
-console.log(err);
+    console.log("Tất cả sản phẩm:", sanpham.value);
 
-}
+  } catch (err) {
+    console.log(err);
+  }
 
-loading.value=false;
-
+  loading.value = false;
 };
 
-const sanphamNoiBat=
-computed(()=>{
+const getMaxPrice = (product) => {
+  if (!product || product.gia == null) {
+    return 0;
+  }
 
-return sanpham.value
+  // Nếu gia là số
+  if (typeof product.gia === "number") {
+    return product.gia;
+  }
 
-.filter(
-i=>i.noibat
-)
+  // Nếu gia là object { "128GB": ..., "256GB": ..., ... }
+  if (typeof product.gia === "object") {
+    const prices = Object.values(product.gia)
+      .map(price => Number(price))
+      .filter(price => !isNaN(price));
 
-.slice(0,8);
+    return prices.length > 0
+      ? Math.max(...prices)
+      : 0;
+  }
+
+  return 0;
+};
+
+
+const sanphamNoiBat = computed(() => {
+
+  return [...sanpham.value]
+    .filter(sp => sp && sp.gia != null)
+    .sort((a, b) => {
+      return getMaxPrice(b) - getMaxPrice(a);
+    })
+    .slice(0, 4);
 
 });
 
-onMounted(
-loadData
-);
+
+const goProducts = () => {
+
+  router.push("/sanpham");
+
+};
+
+
+onMounted(loadData);
 
 </script>
 
+
 <style scoped>
 
-.section{
+/* =========================
+   TOÀN TRANG
+========================= */
 
-padding:60px;
+.home {
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero-section {
+  width: 100%;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f7f9ff 100%
+  );
+
+  padding: 70px 5% 80px;
+
+  box-sizing: border-box;
+}
+
+
+.hero-content {
+  width: 100%;
+  max-width: 1600px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    40% 60%;
+
+  align-items: center;
+
+  gap: 30px;
+}
+
+
+/* =========================
+   HERO - BÊN TRÁI
+========================= */
+
+.hero-text {
+  padding-left: 20px;
+}
+
+
+.badge {
+  display: inline-block;
+
+  padding: 10px 20px;
+
+  background: #eef2ff;
+
+  color: #4169e1;
+
+  border-radius: 30px;
+
+  font-weight: bold;
+
+  font-size: 16px;
+
+  margin-bottom: 25px;
+}
+
+
+.hero-text h1 {
+  margin: 0 0 25px;
+
+  color: #111827;
+
+  font-size: 56px;
+
+  line-height: 1.15;
+
+  font-weight: 800;
+}
+
+
+.hero-text h1 span {
+  color: #4169e1;
+}
+
+
+.hero-text p {
+  max-width: 650px;
+
+  margin-bottom: 32px;
+
+  color: #64748b;
+
+  font-size: 19px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================
+   NÚT XEM SẢN PHẨM
+========================= */
+
+.hero-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 16px 30px;
+
+  background: #111827;
+
+  color: white;
+
+  border-radius: 10px;
+
+  text-decoration: none;
+
+  font-size: 17px;
+
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+}
+
+
+.hero-button:hover {
+  background: #2563eb;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+
+/* =========================
+   THÔNG TIN DỊCH VỤ TRONG HERO
+========================= */
+
+.hero-features {
+  display: flex;
+
+  align-items: center;
+
+  gap: 25px;
+
+  margin-top: 45px;
+
+  flex-wrap: wrap;
+}
+
+
+.hero-features div {
+  display: grid;
+
+  grid-template-columns: 38px auto;
+
+  column-gap: 8px;
+
+  align-items: center;
+
+  font-size: 24px;
+}
+
+
+.hero-features strong {
+  color: #111827;
+
+  font-size: 15px;
+
+  line-height: 1.3;
+}
+
+
+.hero-features span {
+  grid-column: 2;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* =========================
+   HERO - ẢNH BANNER
+========================= */
+
+.hero-image {
+  width: 100%;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+}
+
+
+.hero-image img {
+  display: block;
+
+  width: 100%;
+
+  max-width: 900px;
+
+  height: auto;
+
+  object-fit: contain;
+
+  border-radius: 18px;
+
+  /* Không crop ảnh */
+  object-position: center;
+
+  /* Hiệu ứng nhẹ */
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.12);
+}
+
+
+/* =========================
+   SẢN PHẨM NỔI BẬT
+========================= */
+
+.section {
+  padding: 70px 5%;
+
+  background: #f5f7fb;
+}
+
+
+.title {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  max-width: 1600px;
+
+  margin: 0 auto 35px;
+}
+
+
+.section-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #4169e1;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+
+.title h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 36px;
+
+  font-weight: 800;
+}
+
+
+.title a {
+  color: #2563eb;
+
+  font-size: 16px;
+
+  font-weight: bold;
+
+  text-decoration: none;
+}
+
+
+.title a:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================
+   DANH SÁCH SẢN PHẨM
+========================= */
+
+.products {
+  max-width: 1600px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 25px;
+}
+
+
+.loading {
+  text-align: center;
+
+  padding: 80px;
+
+  font-size: 22px;
+}
+
+
+/* =========================
+   DỊCH VỤ
+========================= */
+
+.feature {
+  padding: 70px 5%;
+
+  background: white;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 25px;
+}
+
+
+.box {
+  padding: 35px 25px;
+
+  text-align: center;
+
+  background: white;
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.07);
+
+  transition: 0.3s;
+}
+
+
+.box:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+
+.feature-icon {
+  font-size: 38px;
+
+  margin-bottom: 15px;
+}
+
+
+.box h3 {
+  margin: 10px 0 12px;
+
+  color: #111827;
+
+  font-size: 20px;
+}
+
+
+.box p {
+  margin: 0;
+
+  color: #64748b;
+
+  line-height: 1.6;
+
+  font-size: 15px;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1200px) {
+
+  .hero-content {
+    grid-template-columns:
+      45% 55%;
+
+    gap: 20px;
+  }
+
+
+  .hero-text h1 {
+    font-size: 46px;
+  }
+
+
+  .hero-text p {
+    font-size: 17px;
+  }
+
+
+  .hero-features {
+    gap: 15px;
+  }
+
+
+  .products {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+
+  .feature {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
 
 }
 
-.title{
 
-display:flex;
+/* =========================
+   TABLET NHỎ
+========================= */
 
-justify-content:space-between;
+@media (max-width: 900px) {
 
-align-items:center;
+  .hero-section {
+    padding: 50px 25px;
+  }
 
-margin-bottom:35px;
 
-}
+  .hero-content {
+    grid-template-columns: 1fr;
 
-.title h2{
+    text-align: center;
+  }
 
-font-size:34px;
 
-}
+  .hero-text {
+    padding-left: 0;
+  }
 
-.title a{
 
-color:#2563eb;
+  .hero-text p {
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-font-weight:bold;
 
-}
+  .hero-features {
+    justify-content: center;
+  }
 
-.products{
 
-display:grid;
+  .hero-image {
+    margin-top: 20px;
+  }
 
-grid-template-columns:
 
-repeat(auto-fill,minmax(260px,1fr));
+  .hero-image img {
+    max-width: 800px;
+  }
 
-gap:30px;
 
-}
-
-.loading{
-
-text-align:center;
-
-padding:80px;
-
-font-size:22px;
-
-}
-
-.feature{
-
-padding:60px;
-
-display:grid;
-
-grid-template-columns:
-
-repeat(auto-fit,minmax(250px,1fr));
-
-gap:30px;
-
-background:white;
-
-margin-top:40px;
+  .products {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
 
 }
 
-.box{
 
-padding:35px;
+/* =========================
+   ĐIỆN THOẠI
+========================= */
 
-text-align:center;
+@media (max-width: 600px) {
 
-border-radius:12px;
+  .hero-section {
+    padding: 40px 20px 50px;
+  }
 
-box-shadow:0 2px 8px rgba(0,0,0,.08);
 
-font-size:22px;
+  .hero-text h1 {
+    font-size: 36px;
+  }
 
-}
 
-.box h3{
+  .hero-text p {
+    font-size: 16px;
+  }
 
-margin:20px 0;
 
-font-size:22px;
+  .hero-features {
+    display: grid;
 
-}
+    grid-template-columns:
+      repeat(2, 1fr);
 
-.box p{
+    gap: 20px;
 
-color:#666;
+    text-align: left;
+  }
 
-line-height:1.6;
 
-}
+  .hero-image img {
+    width: 100%;
 
-@media(max-width:768px){
+    border-radius: 12px;
+  }
 
-.section,
-.feature{
 
-padding:20px;
+  .section {
+    padding: 45px 20px;
+  }
 
-}
 
-.title{
+  .title {
+    flex-direction: column;
 
-flex-direction:column;
+    align-items: flex-start;
 
-gap:15px;
+    gap: 15px;
+  }
 
-}
+
+  .title h2 {
+    font-size: 30px;
+  }
+
+
+  .products {
+    grid-template-columns: 1fr;
+  }
+
+
+  .feature {
+    grid-template-columns: 1fr;
+
+    padding: 45px 20px;
+  }
 
 }
 

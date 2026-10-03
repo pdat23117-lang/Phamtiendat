@@ -1,95 +1,62 @@
 <template>
-  <div class="card">
+  <div
+    class="card"
+    @click="goToDetail"
+  >
 
-    <RouterLink
-      :to="`/chitietsanpham/${product._id}`"
-    >
-
-      <img
-        :src="product.hinh"
-        :alt="product.ten"
-      />
-
-    </RouterLink>
+    <img
+      :src="product.hinh"
+      :alt="product.ten"
+    />
 
     <div class="body">
 
       <span class="brand">
-
         {{ product.hang }}
-
       </span>
 
       <h3>
-
         {{ product.ten }}
-
       </h3>
 
       <div class="spec">
 
-        <span>
-
-          {{ product.ram }}
-
-        </span>
-
-        <span>
-
-          {{ product.bonho }}
-
+        <span v-if="product.bonho?.length">
+          {{ product.bonho.join(", ") }}
         </span>
 
       </div>
 
       <h2>
-
-        {{ product.gia.toLocaleString() }}
-        đ
-
+        {{ getStartingPrice(product) }} đ
       </h2>
 
       <div
         class="stock"
         :class="{
-          out:
-            product.stock<=0
+          out: product.stock <= 0
         }"
       >
 
-        <span
-          v-if="product.stock>0"
-        >
-
-          Còn
-          {{ product.stock }}
-          sản phẩm
-
+        <span v-if="product.stock > 0">
+          Còn {{ product.stock }} sản phẩm
         </span>
 
-        <span
-          v-else
-        >
-
+        <span v-else>
           Hết hàng
-
         </span>
 
       </div>
 
       <button
-        @click="themGioHang"
-        :disabled="
-          product.stock<=0
-        "
+        @click.stop="themGioHang"
+        :disabled="product.stock <= 0"
       >
-
         {{
-          product.stock>0
-          ? "Thêm vào giỏ"
-          : "Hết hàng"
+          product.stock > 0
+            ? "Thêm vào giỏ"
+            : "Hết hàng"
         }}
-
       </button>
 
     </div>
@@ -97,238 +64,341 @@
   </div>
 </template>
 
+
 <script setup>
+
 import axios from "axios";
+import { useRouter } from "vue-router";
 
-const props=
-defineProps({
+const router = useRouter();
 
-product:Object,
-
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true
+  }
 });
 
-const themGioHang=
-async()=>{
 
-const token=
-localStorage.getItem(
-"token"
-);
+// ============================
+// ĐI ĐẾN CHI TIẾT SẢN PHẨM
+// ============================
 
-if(!token){
+const goToDetail = () => {
 
-alert(
-"Vui lòng đăng nhập"
-);
+  router.push(
+    `/chitietsanpham/${props.product._id}`
+  );
 
-return;
+};
 
-}
 
-try{
+// ============================
+// LẤY GIÁ THẤP NHẤT
+// ============================
 
-await axios.post(
+const getStartingPrice = (product) => {
 
-"/cart",
+  if (!product || !product.gia) {
+    return "0";
+  }
 
-{
+  // Trường hợp gia là object:
+  // {
+  //   "128GB": 12990000,
+  //   "256GB": 13990000,
+  //   "512GB": 14990000
+  // }
 
-productId:
-props.product._id,
+  if (
+    typeof product.gia === "object" &&
+    !Array.isArray(product.gia)
+  ) {
 
-soluong:1,
+    const prices = Object.values(product.gia)
+      .map(Number)
+      .filter(
+        price => !isNaN(price)
+      );
 
-},
+    if (prices.length === 0) {
+      return "0";
+    }
 
-{
+    return Math.min(
+      ...prices
+    ).toLocaleString("vi-VN");
 
-headers:{
-Authorization:
-`Bearer ${token}`,
-},
+  }
 
-}
 
-);
+  // Trường hợp gia vẫn là số
 
-alert(
-"Đã thêm vào giỏ hàng"
-);
+  return Number(
+    product.gia
+  ).toLocaleString("vi-VN");
 
-}
-catch(err){
+};
 
-alert(
 
-err.response?.data?.message
+// ============================
+// THÊM VÀO GIỎ HÀNG
+// ============================
 
-||
+const themGioHang = async () => {
 
-"Lỗi thêm giỏ hàng"
+  const token =
+    localStorage.getItem("token");
 
-);
+  if (!token) {
 
-}
+    alert(
+      "Vui lòng đăng nhập"
+    );
+
+    return;
+
+  }
+
+  try {
+
+    // Lấy GB đầu tiên làm lựa chọn mặc định
+
+    const bonho =
+      product.bonho?.[0] || "";
+
+    // Lấy màu đầu tiên làm lựa chọn mặc định
+
+    const mau =
+      product.mau?.[0] || "";
+
+    await axios.post(
+
+      "/cart",
+
+      {
+        productId:
+          props.product._id,
+
+        bonho,
+
+        mau,
+
+        soluong: 1
+      },
+
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`
+        }
+      }
+
+    );
+
+    alert(
+      "Đã thêm vào giỏ hàng"
+    );
+
+  }
+  catch (err) {
+
+    console.error(err);
+
+    alert(
+
+      err.response?.data?.message
+
+      ||
+
+      "Lỗi thêm giỏ hàng"
+
+    );
+
+  }
 
 };
 
 </script>
 
+
 <style scoped>
 
-.card{
+.card {
 
-background:white;
+  background: white;
 
-border-radius:14px;
+  border-radius: 14px;
 
-overflow:hidden;
+  overflow: hidden;
 
-box-shadow:0 2px 12px rgba(0,0,0,.08);
+  box-shadow:
+    0 2px 12px
+    rgba(0,0,0,.08);
 
-transition:.3s;
+  transition: .3s;
 
-display:flex;
+  display: flex;
 
-flex-direction:column;
+  flex-direction: column;
 
-}
-
-.card:hover{
-
-transform:translateY(-6px);
-
-box-shadow:0 10px 24px rgba(0,0,0,.15);
+  cursor: pointer;
 
 }
 
-img{
 
-width:100%;
+.card:hover {
 
-height:240px;
+  transform:
+    translateY(-6px);
 
-object-fit:contain;
-
-padding:20px;
-
-background:white;
+  box-shadow:
+    0 10px 24px
+    rgba(0,0,0,.15);
 
 }
 
-.body{
 
-padding:20px;
+.card img {
 
-}
+  width: 100%;
 
-.brand{
+  height: 240px;
 
-display:inline-block;
+  object-fit: contain;
 
-padding:4px 12px;
+  padding: 20px;
 
-background:#eef2ff;
-
-color:#2563eb;
-
-border-radius:30px;
-
-font-size:13px;
-
-margin-bottom:10px;
+  background: white;
 
 }
 
-h3{
 
-height:55px;
+.body {
 
-margin-bottom:15px;
-
-font-size:18px;
+  padding: 20px;
 
 }
 
-.spec{
 
-display:flex;
+.brand {
 
-gap:10px;
+  display: inline-block;
 
-margin-bottom:15px;
+  padding: 4px 12px;
 
-}
+  background: #eef2ff;
 
-.spec span{
+  color: #2563eb;
 
-background:#f3f4f6;
+  border-radius: 30px;
 
-padding:6px 10px;
+  font-size: 13px;
 
-border-radius:6px;
-
-font-size:13px;
+  margin-bottom: 10px;
 
 }
 
-h2{
 
-color:red;
+h3 {
 
-margin-bottom:15px;
+  height: 55px;
 
-}
+  margin-bottom: 15px;
 
-.stock{
-
-margin-bottom:15px;
-
-font-weight:bold;
-
-color:#16a34a;
+  font-size: 18px;
 
 }
 
-.stock.out{
 
-color:red;
+.spec {
 
-}
+  display: flex;
 
-button{
+  gap: 10px;
 
-width:100%;
-
-padding:14px;
-
-background:#111827;
-
-color:white;
-
-border:none;
-
-border-radius:8px;
-
-cursor:pointer;
-
-font-size:15px;
-
-transition:.3s;
+  margin-bottom: 15px;
 
 }
 
-button:hover{
 
-background:black;
+.spec span {
+
+  background: #f3f4f6;
+
+  padding: 6px 10px;
+
+  border-radius: 6px;
+
+  font-size: 13px;
+
+  color: #555;
 
 }
 
-button:disabled{
 
-background:#9ca3af;
+h2 {
 
-cursor:not-allowed;
+  color: red;
+
+  margin-bottom: 15px;
+
+}
+
+
+.stock {
+
+  margin-bottom: 15px;
+
+  font-weight: bold;
+
+  color: #16a34a;
+
+}
+
+
+.stock.out {
+
+  color: red;
+
+}
+
+
+button {
+
+  width: 100%;
+
+  padding: 14px;
+
+  background: #111827;
+
+  color: white;
+
+  border: none;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  transition: .3s;
+
+}
+
+
+button:hover {
+
+  background: black;
+
+}
+
+
+button:disabled {
+
+  background: #9ca3af;
+
+  cursor: not-allowed;
 
 }
 

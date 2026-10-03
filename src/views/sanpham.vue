@@ -1,716 +1,880 @@
 <template>
+  <div class="container">
 
-<div class="container">
+    <h1>Tất cả sản phẩm</h1>
 
-<h1>Tất cả sản phẩm</h1>
+    <!-- Thanh tìm kiếm và lọc -->
+    <div class="toolbar">
 
-<div class="toolbar">
+      <input
+        v-model="keyword"
+        type="text"
+        placeholder="Tìm kiếm sản phẩm..."
+      />
 
-<input
-v-model="keyword"
-placeholder="Tìm kiếm sản phẩm..."
+      <select v-model="hang">
+        <option value="">
+          Tất cả hãng
+        </option>
+
+        <option value="Apple">
+          Apple
+        </option>
+
+        <option value="Samsung">
+          Samsung
+        </option>
+
+        <option value="Xiaomi">
+          Xiaomi
+        </option>
+      </select>
+
+      <select v-model="sort">
+        <option value="">
+          Sắp xếp
+        </option>
+
+        <option value="asc">
+          Giá tăng dần
+        </option>
+
+        <option value="desc">
+          Giá giảm dần
+        </option>
+      </select>
+
+    </div>
+
+    <!-- Loading -->
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      Đang tải dữ liệu...
+    </div>
+
+    <!-- Danh sách sản phẩm -->
+    <div
+      v-else-if="pageProducts.length > 0"
+      class="products"
+    >
+
+      <div
+  v-for="product in pageProducts"
+  :key="product._id"
+  class="product-card"
+  @click="detail(product._id)"
 >
 
-<select v-model="hang">
+        <!-- Ảnh -->
+        <img
+          :src="product.hinh"
+          :alt="product.ten"
+          class="product-image"
+        />
 
-<option value="">
-Tất cả hãng
-</option>
+        <!-- Tên -->
+        <h3 class="product-name">
+          {{ product.ten }}
+        </h3>
 
-<option value="Apple">
-Apple
-</option>
+        <!-- Hãng -->
+        <p class="product-brand">
+          {{ product.hang }}
+        </p>
 
-<option value="Samsung">
-Samsung
-</option>
+        <!-- Giá thấp nhất -->
+        <h2 class="product-price">
+          {{ getStartingPrice(product) }} đ
+        </h2>
 
-<option value="Xiaomi">
-Xiaomi
-</option>
-
-</select>
-
-<select v-model="sort">
-
-<option value="">
-Sắp xếp
-</option>
-
-<option value="asc">
-Giá tăng dần
-</option>
-
-<option value="desc">
-Giá giảm dần
-</option>
-
-</select>
-
-</div>
-
-<div
-v-if="loading"
-class="loading"
+        <button
+  class="detail-button"
+  @click.stop="detail(product._id)"
 >
-
-Đang tải dữ liệu...
-
-</div>
-
-<div
-v-else
-class="products"
->
-
-<div
-class="card"
-v-for="sp in pageProducts"
-:key="sp._id"
->
-
-<img
-:src="sp.hinh"
-:alt="sp.ten"
-@click="detail(sp._id)"
->
-
-<h3>
-
-{{ sp.ten }}
-
-</h3>
-
-<p>
-
-{{ sp.hang }}
-
-</p>
-
-<h2>
-
-{{ Number(sp.gia || 0).toLocaleString("vi-VN") }} đ
-
-</h2>
-
-<button
-@click="detail(sp._id)"
->
-
-Xem chi tiết
-
+  Xem chi tiết
 </button>
 
-</div>
+      </div>
 
-</div>
+    </div>
 
-<div
-v-if="!loading && filteredProducts.length>0"
-class="pagination"
->
+    <!-- Không có sản phẩm -->
+    <div
+      v-else
+      class="empty"
+    >
+      <h2>
+        Không tìm thấy sản phẩm
+      </h2>
+    </div>
 
-<button
-@click="currentPage--"
-:disabled="currentPage===1"
->
+    <!-- Phân trang -->
+    <div
+      v-if="!loading && filteredProducts.length > 0"
+      class="pagination"
+    >
 
-<<
+      <!-- Trang trước -->
+      <button
+        @click="currentPage--"
+        :disabled="currentPage === 1"
+      >
+        &lt;&lt;
+      </button>
 
-</button>
+      <!-- Số trang -->
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        @click="currentPage = page"
+        :class="{
+          active: currentPage === page
+        }"
+      >
+        {{ page }}
+      </button>
 
-<button
-v-for="page in totalPages"
-:key="page"
-@click="currentPage=page"
-:class="{
-active:currentPage===page
-}"
->
+      <!-- Trang sau -->
+      <button
+        @click="currentPage++"
+        :disabled="currentPage === totalPages"
+      >
+        &gt;&gt;
+      </button>
 
-{{ page }}
+    </div>
 
-</button>
-
-<button
-@click="currentPage++"
-:disabled="currentPage===totalPages"
->
-
->>
-
-</button>
-
-</div>
-
-<div
-v-if="!loading && filteredProducts.length===0"
-class="empty"
->
-
-<h2>
-
-Không tìm thấy sản phẩm
-
-</h2>
-
-</div>
-
-</div>
-
+  </div>
 </template>
+
 
 <script setup>
 
 import axios from "axios";
 
 import {
-ref,
-computed,
-watch,
-onMounted
+  ref,
+  computed,
+  watch,
+  onMounted
 } from "vue";
 
 import {
-useRouter
+  useRouter
 } from "vue-router";
 
-const router=useRouter();
 
-const loading=ref(true);
+const router = useRouter();
 
-const products=ref([]);
 
-const keyword=ref("");
+// ========================
+// BIẾN
+// ========================
 
-const hang=ref("");
+const loading = ref(true);
 
-const sort=ref("");
+const products = ref([]);
 
-const currentPage=ref(1);
+const keyword = ref("");
 
-const perPage=8;
+const hang = ref("");
 
-const loadData=async()=>{
+const sort = ref("");
 
-try{
+const currentPage = ref(1);
 
-const res=
+// Mỗi trang 8 sản phẩm
+const perPage = 8;
 
-await axios.get(
 
-"/sanpham"
+// ========================
+// LẤY SẢN PHẨM
+// ========================
 
-);
+const loadData = async () => {
 
-products.value=
+  try {
 
-res.data.products;
+    const res = await axios.get("/sanpham");
 
-}catch(err){
+    products.value = res.data.products || [];
 
-console.log(err);
+    console.log(
+      "Số sản phẩm nhận được:",
+      products.value.length
+    );
 
-}
+  } catch (err) {
 
-loading.value=false;
+    console.error(
+      "Lỗi lấy sản phẩm:",
+      err
+    );
+
+  } finally {
+
+    loading.value = false;
+
+  }
 
 };
+
+
+// ========================
+// LẤY GIÁ THẤP NHẤT
+// ========================
+
+const getStartingPrice = (product) => {
+
+  if (
+    !product ||
+    !product.gia
+  ) {
+    return "0";
+  }
+
+  const prices = Object.values(
+    product.gia
+  )
+    .map(Number)
+    .filter(price => !isNaN(price));
+
+  if (prices.length === 0) {
+    return "0";
+  }
+
+  const minPrice = Math.min(...prices);
+
+  return minPrice.toLocaleString("vi-VN");
+
+};
+
+
+// ========================
+// GIÁ DÙNG ĐỂ SẮP XẾP
+// ========================
+
+const getMinPrice = (product) => {
+
+  if (
+    !product ||
+    !product.gia
+  ) {
+    return 0;
+  }
+
+  const prices = Object.values(
+    product.gia
+  )
+    .map(Number)
+    .filter(price => !isNaN(price));
+
+  if (prices.length === 0) {
+    return 0;
+  }
+
+  return Math.min(...prices);
+
+};
+
+
+// ========================
+// LỌC + TÌM KIẾM + SẮP XẾP
+// ========================
+
 const filteredProducts = computed(() => {
 
-let data = [...products.value];
+  let data = [
+    ...products.value
+  ];
 
-if (keyword.value) {
 
-data = data.filter(item =>
+  // Tìm kiếm
+  if (keyword.value) {
 
-item.ten
-.toLowerCase()
-.includes(
-keyword.value
-.toLowerCase()
-)
+    const searchKeyword =
+      keyword.value
+        .toLowerCase()
+        .trim();
 
-);
+    data = data.filter(
+      item =>
+        item.ten
+          ?.toLowerCase()
+          .includes(searchKeyword)
+    );
 
-}
+  }
 
-if (hang.value) {
 
-data = data.filter(item =>
+  // Lọc hãng
+  if (hang.value) {
 
-item.hang === hang.value
+    data = data.filter(
+      item =>
+        item.hang === hang.value
+    );
 
-);
+  }
 
-}
 
-if (sort.value === "asc") {
+  // Giá tăng dần
+  if (sort.value === "asc") {
 
-data.sort((a, b) =>
+    data.sort(
+      (a, b) =>
+        getMinPrice(a) -
+        getMinPrice(b)
+    );
 
-a.gia - b.gia
+  }
 
-);
 
-}
+  // Giá giảm dần
+  if (sort.value === "desc") {
 
-if (sort.value === "desc") {
+    data.sort(
+      (a, b) =>
+        getMinPrice(b) -
+        getMinPrice(a)
+    );
 
-data.sort((a, b) =>
+  }
 
-b.gia - a.gia
 
-);
-
-}
-
-return data;
+  return data;
 
 });
+
+
+// ========================
+// TỔNG SỐ TRANG
+// ========================
 
 const totalPages = computed(() => {
 
-return Math.ceil(
-
-filteredProducts.value.length /
-
-perPage
-
-);
+  return Math.ceil(
+    filteredProducts.value.length /
+    perPage
+  );
 
 });
+
+
+// ========================
+// SẢN PHẨM CỦA TRANG HIỆN TẠI
+// ========================
 
 const pageProducts = computed(() => {
 
-const start =
+  const start =
+    (currentPage.value - 1) *
+    perPage;
 
-(currentPage.value - 1)
-
-*
-
-perPage;
-
-return filteredProducts.value.slice(
-
-start,
-
-start + perPage
-
-);
+  return filteredProducts.value.slice(
+    start,
+    start + perPage
+  );
 
 });
 
+
+// ========================
+// KHI TÌM KIẾM / LỌC / SẮP XẾP
+// QUAY VỀ TRANG 1
+// ========================
+
 watch(
+  [
+    keyword,
+    hang,
+    sort
+  ],
+  () => {
 
-[
-keyword,
-hang,
-sort,
-],
+    currentPage.value = 1;
 
-() => {
-
-currentPage.value = 1;
-
-}
-
+  }
 );
+
+
+// ========================
+// XEM CHI TIẾT
+// ========================
 
 const detail = (id) => {
 
-router.push(
-
-`/chitietsanpham/${id}`
-
-);
+  router.push(
+    `/chitietsanpham/${id}`
+  );
 
 };
 
-onMounted(
 
-loadData
+// ========================
+// LOAD KHI MỞ TRANG
+// ========================
 
-);
+onMounted(() => {
+
+  loadData();
+
+});
 
 </script>
 
+
 <style scoped>
 
-.container{
+.container {
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
-padding:40px;
 
-max-width:1400px;
+/* ========================
+   TIÊU ĐỀ
+======================== */
 
-margin:auto;
+h1 {
+  margin-bottom: 30px;
+  font-size: 34px;
+}
+
+
+/* ========================
+   THANH TÌM KIẾM
+======================== */
+
+.toolbar {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 35px;
+}
+
+.toolbar input {
+  flex: 1;
+  min-width: 250px;
+  padding: 14px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  font-size: 15px;
+}
+
+.toolbar select {
+  padding: 14px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  font-size: 15px;
+  background: white;
+
+  cursor: pointer;
+}
+
+
+/* ========================
+   LOADING
+======================== */
+
+.loading {
+  text-align: center;
+  padding: 80px;
+  font-size: 22px;
+}
+
+
+/* ========================
+   DANH SÁCH SẢN PHẨM
+======================== */
+
+.products {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 30px;
 
 }
 
-h1{
 
-margin-bottom:30px;
+/* ========================
+   CARD SẢN PHẨM
+======================== */
 
-font-size:34px;
+.product-card {
 
-}
+  background: white;
 
-.toolbar{
+  border-radius: 12px;
 
-display:flex;
+  padding: 20px;
 
-gap:20px;
+  box-shadow:
+    0 2px 10px
+    rgba(0, 0, 0, 0.08);
 
-flex-wrap:wrap;
+  display: flex;
 
-margin-bottom:35px;
+  flex-direction: column;
 
-}
+  align-items: center;
 
-.toolbar input{
+  transition: 0.3s;
 
-flex:1;
-
-min-width:250px;
-
-padding:14px;
-
-border:1px solid #ddd;
-
-border-radius:10px;
-
-font-size:15px;
+  min-width: 0;
 
 }
 
-.toolbar select{
 
-padding:14px;
+.product-card:hover {
 
-border:1px solid #ddd;
+  transform:
+    translateY(-5px);
 
-border-radius:10px;
-
-font-size:15px;
-
-}
-
-.loading{
-
-text-align:center;
-
-padding:80px;
-
-font-size:22px;
+  box-shadow:
+    0 8px 20px
+    rgba(0, 0, 0, 0.15);
 
 }
 
-.products{
 
-display:grid;
+/* ========================
+   ẢNH SẢN PHẨM
+======================== */
 
-grid-template-columns:
+.product-image {
 
-repeat(
+  width: 200px;
 
-auto-fill,
+  height: 200px;
 
-minmax(260px,1fr)
+  object-fit: contain;
 
-);
+  display: block;
 
-gap:30px;
+  margin-bottom: 20px;
 
-}
-.card{
-
-background:white;
-
-border-radius:12px;
-
-padding:20px;
-
-box-shadow:0 2px 10px rgba(0,0,0,.08);
-
-display:flex;
-
-flex-direction:column;
-
-align-items:center;
-
-transition:.3s;
+  cursor: pointer;
 
 }
 
-.card:hover{
 
-transform:translateY(-5px);
+/* ========================
+   TÊN SẢN PHẨM
+======================== */
 
-box-shadow:0 8px 20px rgba(0,0,0,.15);
+.product-name {
 
-}
+  font-size: 18px;
 
-.card img{
+  text-align: center;
 
-width:200px;
+  margin: 0 0 10px;
 
-height:200px;
+  min-height: 50px;
 
-object-fit:contain;
+  display: flex;
 
-cursor:pointer;
+  align-items: center;
 
-margin-bottom:20px;
-
-}
-
-.card h3{
-
-font-size:18px;
-
-text-align:center;
-
-margin-bottom:10px;
-
-min-height:50px;
+  justify-content: center;
 
 }
 
-.card p{
 
-color:#666;
+/* ========================
+   HÃNG
+======================== */
 
-margin-bottom:12px;
+.product-brand {
 
-}
+  color: #666;
 
-.card h2{
-
-font-size:24px;
-
-color:#ef4444;
-
-margin-bottom:18px;
+  margin: 0 0 12px;
 
 }
 
-.card button{
 
-width:100%;
+/* ========================
+   GIÁ
+======================== */
 
-padding:14px;
+.product-price {
 
-background:#111827;
+  font-size: 24px;
 
-color:white;
+  color: #ef4444;
 
-border:none;
+  margin: 0 0 18px;
 
-border-radius:8px;
-
-font-size:16px;
-
-cursor:pointer;
-
-transition:.3s;
+  text-align: center;
 
 }
 
-.card button:hover{
 
-background:#000;
+/* ========================
+   NÚT XEM CHI TIẾT
+======================== */
 
-}
+.detail-button {
 
-.pagination{
+  width: 100%;
 
-display:flex;
+  padding: 14px;
 
-justify-content:center;
+  background: #111827;
 
-align-items:center;
+  color: white;
 
-gap:10px;
+  border: none;
 
-margin-top:40px;
+  border-radius: 8px;
 
-flex-wrap:wrap;
+  font-size: 16px;
 
-}
+  cursor: pointer;
 
-.pagination button{
-
-min-width:45px;
-
-height:45px;
-
-border:none;
-
-border-radius:8px;
-
-background:#e5e7eb;
-
-cursor:pointer;
-
-font-size:16px;
-
-font-weight:bold;
-
-transition:.3s;
+  transition: 0.3s;
 
 }
 
-.pagination button:hover{
 
-background:#d1d5db;
+.detail-button:hover {
 
-}
-
-.pagination button.active{
-
-background:#111827;
-
-color:white;
+  background: #000;
 
 }
 
-.pagination button:disabled{
 
-opacity:.5;
+/* ========================
+   PHÂN TRANG
+======================== */
 
-cursor:not-allowed;
+.pagination {
 
-}
+  display: flex;
 
-.empty{
+  justify-content: center;
 
-text-align:center;
+  align-items: center;
 
-padding:80px;
+  gap: 10px;
 
-font-size:22px;
+  margin-top: 40px;
 
-color:#666;
-
-}
-
-.empty h2{
-
-margin-bottom:20px;
-
-}
-.empty p{
-
-margin-top:10px;
-
-color:#999;
+  flex-wrap: wrap;
 
 }
 
-@media(max-width:900px){
 
-.container{
+.pagination button {
 
-padding:20px;
+  min-width: 45px;
 
-}
+  height: 45px;
 
-.toolbar{
+  border: none;
 
-flex-direction:column;
+  border-radius: 8px;
 
-}
+  background: #e5e7eb;
 
-.toolbar input,
-.toolbar select{
+  cursor: pointer;
 
-width:100%;
+  font-size: 16px;
 
-}
+  font-weight: bold;
 
-.products{
-
-grid-template-columns:
-
-repeat(
-auto-fill,
-minmax(220px,1fr)
-);
+  transition: 0.3s;
 
 }
 
-}
 
-@media(max-width:600px){
+.pagination button:hover {
 
-h1{
-
-font-size:28px;
-
-text-align:center;
+  background: #d1d5db;
 
 }
 
-.card{
 
-padding:15px;
+.pagination button.active {
 
-}
+  background: #111827;
 
-.card img{
-
-width:150px;
-
-height:150px;
+  color: white;
 
 }
 
-.card h3{
 
-font-size:16px;
+.pagination button:disabled {
 
-min-height:auto;
+  opacity: 0.5;
 
-}
-
-.card h2{
-
-font-size:20px;
+  cursor: not-allowed;
 
 }
 
-.card button{
 
-padding:12px;
+/* ========================
+   KHÔNG CÓ SẢN PHẨM
+======================== */
 
-font-size:15px;
+.empty {
 
-}
+  text-align: center;
 
-.pagination{
+  padding: 80px;
 
-gap:8px;
+  font-size: 22px;
 
-}
-
-.pagination button{
-
-min-width:38px;
-
-height:38px;
-
-font-size:14px;
+  color: #666;
 
 }
 
-.empty{
 
-padding:50px 20px;
+.empty h2 {
 
-font-size:18px;
-
-}
+  margin-bottom: 20px;
 
 }
 
+
+/* ========================
+   RESPONSIVE
+======================== */
+
+@media (max-width: 1100px) {
+
+  .products {
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0, 1fr)
+      );
+
+  }
+
+}
+
+
+@media (max-width: 800px) {
+
+  .container {
+
+    padding: 20px;
+
+  }
+
+  .toolbar {
+
+    flex-direction: column;
+
+  }
+
+  .toolbar input,
+  .toolbar select {
+
+    width: 100%;
+
+  }
+
+  .products {
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  h1 {
+
+    font-size: 28px;
+
+    text-align: center;
+
+  }
+
+  .products {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+  .product-image {
+
+    width: 180px;
+
+    height: 180px;
+
+  }
+
+  .product-name {
+
+    font-size: 16px;
+
+    min-height: auto;
+
+  }
+
+  .product-price {
+
+    font-size: 20px;
+
+  }
+
+  .detail-button {
+
+    padding: 12px;
+
+    font-size: 15px;
+
+  }
+
+}
+.product-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  transition: 0.3s;
+
+  min-width: 0;
+
+  /* Thêm */
+  cursor: pointer;
+}
+.product-card:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 8px 20px
+    rgba(0, 0, 0, 0.15);
+}
 </style>

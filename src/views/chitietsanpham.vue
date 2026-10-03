@@ -15,15 +15,67 @@
 
       <div class="left">
 
-        <img
-  :src="product.hinh"
-  :alt="product.ten"
-  @error="
-    $event.target.src='/images/no-image.jpg'
-  "
-/>
+  <div class="product-gallery">
 
-      </div>
+    <!-- Ảnh chính -->
+    <div class="main-image-container">
+
+      <button
+        v-if="productImages.length > 1"
+        class="gallery-arrow left"
+        @click="prevImage"
+      >
+        ‹
+      </button>
+
+      <img
+        :src="productImages[currentImageIndex]"
+        :alt="product.ten"
+        class="main-product-image"
+        @error="
+          $event.target.src='/images/no-image.jpg'
+        "
+      />
+
+      <button
+        v-if="productImages.length > 1"
+        class="gallery-arrow right"
+        @click="nextImage"
+      >
+        ›
+      </button>
+
+    </div>
+
+    <!-- Ảnh nhỏ -->
+    <div
+      v-if="productImages.length > 1"
+      class="thumbnail-list"
+    >
+
+      <button
+        v-for="(image, index) in productImages"
+        :key="image"
+        class="thumbnail"
+        :class="{
+          active:
+            currentImageIndex === index
+        }"
+        @click="selectImage(index)"
+      >
+
+        <img
+          :src="image"
+          :alt="`${product.ten} - ảnh ${index + 1}`"
+        />
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
       <div class="right">
 
@@ -43,82 +95,82 @@
 </div>
 
         <h2>
-          {{ Number(product.gia || 0).toLocaleString("vi-VN") }} đ
-        </h2>
-        <p
-  v-if="product.stock>0"
+  {{ Number(currentPrice || 0).toLocaleString("vi-VN") }} đ
+</h2>
+
+<p
+  v-if="product.stock > 0"
   class="instock"
 >
-
-🟢 Còn hàng
-
+  🟢 Còn hàng
 </p>
 
 <p
   v-else
   class="outstock"
 >
-
-🔴 Hết hàng
-
+  🔴 Hết hàng
 </p>
 
-        <table>
+<table>
 
-          <tr>
+  <tr>
+    <td>Hãng</td>
+    <td>{{ product.hang }}</td>
+  </tr>
 
-            <td>Hãng</td>
+  <tr>
+    <td>Bộ nhớ</td>
+    <td>
+      <div class="options">
+        <button
+          v-for="storage in product.bonho"
+          :key="storage"
+          :class="{ active: selectedStorage === storage }"
+          @click="selectedStorage = storage"
+        >
+          {{ storage }}
+        </button>
+      </div>
+    </td>
+  </tr>
 
-            <td>{{ product.hang }}</td>
+  <tr>
+    <td>Màu</td>
+    <td>
+      <div class="options">
+        <button
+          v-for="color in product.mau"
+          :key="color"
+          :class="{ active: selectedColor === color }"
+          @click="selectedColor = color"
+        >
+          {{ color }}
+        </button>
+      </div>
+    </td>
+  </tr>
 
-          </tr>
+  <tr>
+    <td>Bảo hành</td>
+    <td>{{ product.baohanh }}</td>
+  </tr>
 
-          <tr>
+  <tr>
+    <td>Tồn kho</td>
+    <td>
+      {{ product.stock }}
 
-            <td>RAM</td>
+      <span
+        v-if="product.stock === 0"
+        class="soldout"
+      >
+        (Hết hàng)
+      </span>
+    </td>
+  </tr>
 
-            <td>{{ product.ram }}</td>
-
-          </tr>
-
-          <tr>
-
-            <td>Bộ nhớ</td>
-
-            <td>{{ product.bonho }}</td>
-
-          </tr>
-
-          <tr>
-
-            <td>Màu</td>
-
-            <td>{{ product.mau }}</td>
-
-          </tr>
-
-          <tr>
-
-            <td>Bảo hành</td>
-
-            <td>{{ product.baohanh }}</td>
-
-          </tr>
-
-          <tr>
-  <td>Tồn kho</td>
-  <td>
-    {{ product.stock }}
-    <span
-      v-if="product.stock===0"
-      class="soldout"
-    >
-      (Hết hàng)
-    </span>
-  </td>
-</tr>
-
-        </table>
+</table>
 
         <div class="quantity">
 
@@ -126,7 +178,7 @@
             @click="quantity--"
             :disabled="quantity<=1"
           >
-            -
+            
           </button>
 
           <span>
@@ -285,22 +337,79 @@ Chưa có đánh giá nào.
     </div>
 
   </div>
+  
+
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 import axios from "axios";
 
-import {
-ref,
-onMounted,
-} from "vue";
 
 import {
 useRoute,
 useRouter,
 } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+
+
+const selectedStorage = ref("");
+const selectedColor = ref("");
+
+const currentImageIndex = ref(0);
+
+let imageInterval = null;
+
+const productImages = computed(() => {
+    if (product.value?.hinhAnh?.length) {
+        return product.value.hinhAnh;
+    }
+
+    if (product.value?.hinh) {
+        return [product.value.hinh];
+    }
+
+    return [];
+}); 
+const nextImage = () => {
+    if (!productImages.value.length) return;
+
+    currentImageIndex.value =
+        (currentImageIndex.value + 1) %
+        productImages.value.length;
+};
+
+const prevImage = () => {
+    if (!productImages.value.length) return;
+
+    currentImageIndex.value =
+        (currentImageIndex.value - 1 + productImages.value.length) %
+        productImages.value.length;
+};
+
+const selectImage = (index) => {
+    currentImageIndex.value = index;
+};
+const startImageSlide = () => {
+    imageInterval = setInterval(() => {
+        nextImage();
+    }, 4000);
+};
+
+const stopImageSlide = () => {
+    if (imageInterval) {
+        clearInterval(imageInterval);
+        imageInterval = null;
+    }
+};
+onMounted(() => {
+    startImageSlide();
+});
+
+onUnmounted(() => {
+    stopImageSlide();
+}); 
 
 const route=
 useRoute();
@@ -324,82 +433,134 @@ ref("");
 const product=
 ref({});
 
-const loadProduct=
-async()=>{
+const loadProduct = async () => {
+  try {
+    loading.value = true;
 
-try{
+   const res = await axios.get(
+  `/sanpham/${route.params.id}`
+);
 
-const res=
-await axios.get(`/sanpham/${route.params.id}`);
+product.value = res.data;
+    // Chọn dung lượng đầu tiên
+    if (product.value.bonho?.length) {
+      selectedStorage.value = product.value.bonho[0];
+    }
 
-product.value=
-res.data;
-quantity.value = 1;
+    // Chọn màu đầu tiên
+    if (product.value.mau?.length) {
+      selectedColor.value = product.value.mau[0];
+    }
 
-}
-catch(err){
-
-console.log(err);
-
-}
-
-loading.value=false;
-
-};
- const addToCart =
-async()=>{
-  if(!auth.token){
-
-alert("Vui lòng đăng nhập");
-
-return;
-
-}
-
-if(product.value.stock===0){
-
-alert("Sản phẩm đã hết hàng");
-
-return;
-
-}
-
-if(quantity.value>product.value.stock){
-
-alert("Số lượng vượt quá tồn kho");
-
-return;
-
-}
-
-
-try{
-
-await axios.post(
-  "/cart",
-  {
-    productId: product.value._id,
-    soluong: quantity.value,
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
-);
+};
+const addToCart = async () => {
+  if (!product.value) {
+    return;
+  }
 
-alert(
-"Đã thêm vào giỏ hàng"
-);
-return true;
+  if (!selectedStorage.value) {
+    alert("Vui lòng chọn bộ nhớ");
+    return;
+  }
 
+  if (!selectedColor.value) {
+    alert("Vui lòng chọn màu");
+    return;
+  }
+
+  if (product.value.stock === 0) {
+    alert("Sản phẩm đã hết hàng");
+    return;
+  }
+
+  if (quantity.value > product.value.stock) {
+    alert("Số lượng vượt quá tồn kho");
+    return;
+  }
+
+  try {
+  await axios.post("/cart", {
+    productId: product.value._id,
+    bonho: selectedStorage.value,
+    mau: selectedColor.value,
+    soluong: quantity.value
+  });
+
+  alert("Đã thêm sản phẩm vào giỏ hàng");
+
+  return true;
+
+} catch (err) {
+  console.error(err);
+
+  alert(
+    err.response?.data?.message ||
+    "Thêm vào giỏ thất bại"
+  );
+
+  return false;
 }
-catch(err){
+};
+const getColorCode = (color) => {
+    const colorMap = {
+        "Đen": "#111111",
+        "Trắng": "#ffffff",
+        "Bạc": "#d9d9d9",
+        "Đỏ": "#d32f2f",
+        "Hồng": "#f4a6c1",
+        "Xanh Dương": "#4f83cc",
+        "Xanh Lá": "#6fa66f",
+        "Vàng": "#f4d35e",
 
-alert(
-err.response?.data?.message ||
-"Thêm vào giỏ thất bại"
-);
+        "Ánh Sao": "#eeeae0",
+        "Đêm Xanh Thẳm": "#172033",
 
-return false;
+        "Xanh Mòng Két": "#5caaa4",
+        "Xanh Lưu Ly": "#8ca7d8",
 
-}
+        "Titan Đen": "#3b3b3b",
+        "Titan Trắng": "#e3e3e3",
+        "Titan Tự Nhiên": "#a9a59b",
+        "Titan Sa Mạc": "#c5a17a",
 
+        "Xanh Lam Khói": "#8ba4b8",
+        "Xanh Lá Xô Thơm": "#9cab91",
+        "Tím Oải Hương": "#b5a9c9",
+
+        "Hồng Phai": "#e8c6ce",
+
+        "Bạc": "#d8d8d8",
+        "Cam Vũ Trụ": "#d96b32",
+        "Xanh Đậm": "#183b62",
+
+        "Băng Thanh": "#b8c8df",
+        "Đỏ Burgundy": "#720018",
+
+        "Đen Không Gian": "#202124",
+        "Trắng Mây": "#f1f1ed",
+        "Vàng Nhạt": "#e5d39b",
+        "Xanh Da Trời": "#9fc6e8",
+
+        "Trời Đêm": "#111827",
+        "Trắng Ánh Sao": "#f5f5ef"
+    };
+
+    return colorMap[color] || "#cccccc";
+};
+const currentPrice = computed(() => {
+  if (!product.value || !selectedStorage.value) {
+    return 0;
+  }
+
+  return product.value.gia?.[selectedStorage.value] || 0;
+});
+const formatPrice = (price) => {
+  return Number(price || 0).toLocaleString("vi-VN") + "đ";
 };
 const buyNow = async()=>{
 
@@ -984,5 +1145,215 @@ color:#666;
 
 font-style:italic;
 
+}
+.product-gallery {
+    width: 100%;
+}
+
+.main-image-container {
+    position: relative;
+    width: 100%;
+    height: 480px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.main-product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-arrow {
+    position: absolute;
+
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+
+    font-size: 30px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    z-index: 5;
+
+    transition: 0.2s;
+}
+
+.gallery-arrow:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.gallery-arrow.left {
+    left: 15px;
+}
+
+.gallery-arrow.right {
+    right: 15px;
+}
+
+
+/* ẢNH NHỎ */
+
+.thumbnail-list {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    margin-top: 15px;
+}
+
+.thumbnail {
+    width: 75px;
+    height: 75px;
+
+    border: 2px solid transparent;
+    border-radius: 8px;
+
+    overflow: hidden;
+    cursor: pointer;
+
+    background: white;
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.thumbnail.active {
+    border-color: #287cff;
+}
+.product-option {
+    margin-top: 20px;
+}
+
+.product-option h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.option-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.storage-btn {
+    padding: 10px 18px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    font-size: 14px;
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.storage-btn:hover {
+    border-color: #287cff;
+}
+
+.storage-btn.active {
+    border: 2px solid #287cff;
+    color: #287cff;
+    background: #f5f9ff;
+}
+
+
+.color-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.color-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 9px 14px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition: 0.2s;
+}
+
+.color-btn:hover {
+    border-color: #287cff;
+}
+
+.color-btn.active {
+    border: 2px solid #287cff;
+    color: #287cff;
+    background: #f5f9ff;
+}
+
+.color-dot {
+    width: 17px;
+    height: 17px;
+
+    border-radius: 50%;
+
+    border: 1px solid #ccc;
+
+    flex-shrink: 0;
+}
+.option-group {
+  margin: 20px 0;
+}
+
+.option-group h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.options button {
+  padding: 10px 18px;
+  border: 1px solid #ccc;
+  background: white;
+  color: #111;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.options button:hover {
+  border-color: #111;
+}
+
+.options button.active {
+  background: #111;
+  color: white;
+  border-color: #111;
 }
 </style>

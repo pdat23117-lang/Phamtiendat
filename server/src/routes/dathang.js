@@ -9,6 +9,7 @@ const {
   updateOrderStatus,
   cancelOrder,
   getThongKe,
+  confirmBankTransfer,
 } = require("../controllers/dathang");
 
 const { protect } = require("../middleware/auth");
@@ -30,6 +31,11 @@ router.put("/:id/cancel", protect, cancelOrder);
 // Xem chi tiết đơn hàng
 router.get("/:id", protect, getOrderById);
 
+router.put(
+  "/:id/confirm-bank",
+  protect,
+  confirmBankTransfer
+);
 // =========================
 // ADMIN
 // =========================

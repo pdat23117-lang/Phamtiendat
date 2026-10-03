@@ -243,142 +243,120 @@ const addToCart = async (req, res) => {
 // Cập nhật số lượng
 // PUT /cart/item/:itemId
 // ==============================
+// ==============================
+// Cập nhật số lượng
+// PUT /cart/item/:itemId
+// ==============================
 const updateCart = async (req, res) => {
   try {
+    const { soluong } = req.body;
+    const itemId = req.params.itemId;
 
-    const {
-      soluong,
-    } = req.body;
+    console.log("========== UPDATE CART ==========");
+    console.log("itemId nhận được:", itemId);
+    console.log("soluong:", soluong);
 
+    // Tìm giỏ hàng
+    const cart = await Cart.findOne({
+      user: req.user._id
+    });
+
+    if (!cart) {
+      return res.status(404).json({
+        message: "Không tìm thấy giỏ hàng"
+      });
+    }
+
+    console.log(
+      "Các item trong giỏ:",
+      cart.items.map(item => ({
+        id: item._id?.toString(),
+        sanpham: item.sanpham?.toString(),
+        bonho: item.bonho,
+        mau: item.mau,
+        soluong: item.soluong
+      }))
+    );
+
+    // ==============================
+    // Tìm item bằng _id
+    // ==============================
+    const item = cart.items.find(
+      item =>
+        item._id &&
+        item._id.toString() === itemId
+    );
+
+    if (!item) {
+      return res.status(404).json({
+        message: "Không tìm thấy sản phẩm trong giỏ hàng"
+      });
+    }
 
     // ==============================
     // Kiểm tra số lượng
     // ==============================
-    const soLuongMoi =
-      Number(soluong);
+    const soLuongMoi = Number(soluong);
 
-
-    if (
-      isNaN(soLuongMoi)
-    ) {
+    if (!Number.isInteger(soLuongMoi) || soLuongMoi < 1) {
       return res.status(400).json({
-        message:
-          "Số lượng không hợp lệ",
+        message: "Số lượng không hợp lệ"
       });
     }
 
-
     // ==============================
-    // Tìm giỏ hàng
+    // Tìm sản phẩm
     // ==============================
-    const cart =
-      await Cart.findOne({
-        user: req.user._id,
-      });
+    const product = await Product.findById(
+      item.sanpham
+    );
 
-
-    if (!cart) {
+    if (!product) {
       return res.status(404).json({
-        message:
-          "Không có giỏ hàng",
+        message: "Không tìm thấy sản phẩm"
       });
     }
 
-
     // ==============================
-    // Tìm item theo _id
+    // Kiểm tra tồn kho
     // ==============================
-    const item =
-      cart.items.id(
-        req.params.itemId
-      );
-
-
-    if (!item) {
-      return res.status(404).json({
-        message:
-          "Không tìm thấy sản phẩm trong giỏ hàng",
+    if (soLuongMoi > product.stock) {
+      return res.status(400).json({
+        message: `Chỉ còn ${product.stock} sản phẩm`
       });
     }
 
-
     // ==============================
-    // Nếu số lượng <= 0
-    // thì xóa item
+    // Cập nhật
     // ==============================
-    if (soLuongMoi <= 0) {
+    item.soluong = soLuongMoi;
 
-      item.deleteOne();
-
-    } else {
-
-      // ==============================
-      // Lấy sản phẩm
-      // ==============================
-      const product =
-        await Product.findById(
-          item.sanpham
-        );
-
-
-      if (!product) {
-        return res.status(404).json({
-          message:
-            "Không tìm thấy sản phẩm",
-        });
-      }
-
-
-      // ==============================
-      // Kiểm tra tồn kho
-      // ==============================
-      if (
-        soLuongMoi >
-        product.stock
-      ) {
-        return res.status(400).json({
-          message:
-            "Số lượng vượt quá tồn kho",
-        });
-      }
-
-
-      // ==============================
-      // Cập nhật số lượng
-      // ==============================
-      item.soluong =
-        soLuongMoi;
-    }
-
-
-    // ==============================
-    // Lưu
-    // ==============================
     await cart.save();
 
-
     // ==============================
-    // Trả về giỏ hàng
+    // Lấy lại giỏ hàng
     // ==============================
-    const result =
-      await Cart.findById(
-        cart._id
-      ).populate(
-        "items.sanpham"
-      );
+    const updatedCart = await Cart
+      .findById(cart._id)
+      .populate("items.sanpham");
 
+    console.log(
+      "Cập nhật thành công:",
+      item._id.toString()
+    );
 
-    res.json(result);
+    res.json(updatedCart);
 
-  } catch (err) {
+  } catch (error) {
 
     console.error(
-      "Lỗi cập nhật giỏ hàng:",
-      err
+      "Lỗi updateCart:",
+      error
     );
 
     res.status(500).json({
-      message: err.message,
+      message: "Lỗi cập nhật giỏ hàng",
+      error: error.message
     });
   }
 };

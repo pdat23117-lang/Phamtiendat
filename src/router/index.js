@@ -30,7 +30,7 @@ import admindoanhthu from "../views/admindoanhthu.vue";
 import danhgia from "../views/danhgia.vue";
 import themsanpham from "../views/themsanpham.vue";
 import suasanpham from "../views/suasanpham.vue";
-
+import ThanhToan from "../views/ThanhToan.vue";
 const routes = [
 
   {
@@ -155,6 +155,10 @@ const routes = [
   {
   path: "/danhgia/:productId",
   component: danhgia,
+},
+{
+  path: "/ThanhToan/:id",
+  component: ThanhToan,
 },
 
 ];
