@@ -326,39 +326,111 @@ const checkReview = async (req, res) => {
 // ========================
 // ADMIN TRẢ LỜI
 // ========================
+// ==========================================
+// ADMIN - PHẢN HỒI ĐÁNH GIÁ
+// ==========================================
 const replyReview = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.productId);
+
+    const { productId, reviewId } = req.params;
+
+    const { reply } = req.body;
+
+
+    // Kiểm tra nội dung
+    if (!reply || !reply.trim()) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Nội dung phản hồi không được để trống",
+      });
+
+    }
+
+
+    // Tìm sản phẩm
+    const product =
+      await Product.findById(productId);
+
 
     if (!product) {
+
       return res.status(404).json({
+        success: false,
         message: "Không tìm thấy sản phẩm",
       });
+
     }
 
-    const review = product.reviews.id(req.params.reviewId);
+
+    // Tìm review
+    const review =
+      product.reviews.id(reviewId);
+
 
     if (!review) {
+
       return res.status(404).json({
+        success: false,
         message: "Không tìm thấy đánh giá",
       });
+
     }
 
-    review.adminReply = req.body.reply;
-    review.repliedAt = new Date();
 
+    // ======================================
+    // QUAN TRỌNG
+    // LƯU VÀO adminReply
+    // ======================================
+
+    review.adminReply =
+      reply.trim();
+
+
+    // Lưu sản phẩm
     await product.save();
 
-    res.json({
-      message: "Đã trả lời đánh giá",
+
+    return res.status(200).json({
+
+      success: true,
+
+      message: "Đã lưu phản hồi",
+
+      review: {
+
+        _id: review._id,
+
+        adminReply:
+          review.adminReply,
+
+      },
+
     });
-  } catch (error) {
-    res.status(500).json({
-      message: "Lỗi server",
+
+  }
+  catch (error) {
+
+    console.error(
+      "Lỗi replyReview:",
+      error
+    );
+
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Lỗi server khi lưu phản hồi",
+
+      error:
+        error.message,
+
     });
+
   }
 };
-
 // ========================
 // XÓA ĐÁNH GIÁ
 // ========================

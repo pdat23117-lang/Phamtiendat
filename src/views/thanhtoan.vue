@@ -119,30 +119,32 @@
 
         <!-- QR -->
 
-        <div class="qr-section">
+        <!-- QR -->
 
-          <h2>
-            📱 Quét mã QR
-          </h2>
+<div class="qr-section">
 
-          <img
-            :src="qrUrl"
-            alt="QR thanh toán"
-            class="qr-image"
-          />
+  <h2>
+    📱 Quét mã QR
+  </h2>
 
-          <p>
-            Mở ứng dụng ngân hàng và quét mã QR
-          </p>
+  <img
+    src="/images/qr.png"
+    alt="QR thanh toán DAT MOBILE"
+    class="qr-image"
+  />
 
-        </div>
+  <p>
+    Mở ứng dụng ngân hàng và quét mã QR
+  </p>
 
-      </div>
+</div>
+
+</div>
 
 
-      <!-- LƯU Ý -->
+<!-- LƯU Ý -->
 
-      <div class="notice">
+<div class="notice">
 
         <strong>
           ⚠️ Lưu ý
@@ -256,30 +258,6 @@ const shortOrderId =
 
   });
 
-
-// =============================
-// QR VIETQR
-// =============================
-
-const qrUrl =
-  computed(() => {
-
-    const amount =
-      Number(
-        order.value.thanhTien
-      ) || 0;
-
-    const content =
-      `DATMOBILE ${shortOrderId.value}`;
-
-    return `https://img.vietqr.io/image/MB-0123456789-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=PHAM%20TIEN%20DAT`;
-
-  });
-
-
-// =============================
-// FORMAT TIỀN
-// =============================
 
 const formatMoney =
   (value) => {
@@ -999,5 +977,19 @@ onMounted(
   }
 
 }
+.qr-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+}
 
+.qr-image {
+  width: 280px;
+  height: 280px;
+  object-fit: contain;
+  border-radius: 12px;
+}
 </style>

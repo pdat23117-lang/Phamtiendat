@@ -684,9 +684,7 @@ const getItemPrice = (item) => {
   }
 
 
-  /*
-    Trường hợp gia là Number
-  */
+  // gia là Number
 
   if (
     typeof product.gia === "number"
@@ -697,9 +695,7 @@ const getItemPrice = (item) => {
   }
 
 
-  /*
-    Trường hợp gia là String
-  */
+  // gia là String
 
   if (
     typeof product.gia === "string"
@@ -713,10 +709,7 @@ const getItemPrice = (item) => {
   }
 
 
-  /*
-    Trường hợp gia là Object
-    theo bộ nhớ
-  */
+  // gia là Object theo bộ nhớ
 
   if (
     typeof product.gia === "object"
@@ -746,6 +739,7 @@ const tongSoLuong =
         ? cart.value.items
         : [];
 
+
     return items.reduce(
       (sum, item) => {
 
@@ -773,6 +767,7 @@ const tongTien =
         ? cart.value.items
         : [];
 
+
     return items.reduce(
       (sum, item) => {
 
@@ -781,6 +776,7 @@ const tongTien =
 
         const quantity =
           Number(item.soluong || 0);
+
 
         return (
           sum +
@@ -803,6 +799,7 @@ const loadCart =
 
     loadingCart.value = true;
 
+
     try {
 
       const res =
@@ -816,10 +813,6 @@ const loadCart =
           }
         );
 
-
-      /*
-        Đảm bảo items luôn là Array
-      */
 
       cart.value = {
 
@@ -884,9 +877,7 @@ const validateForm =
     let valid = true;
 
 
-    /*
-      HỌ TÊN
-    */
+    // HỌ TÊN
 
     if (
       !shipping.value.ten
@@ -910,9 +901,7 @@ const validateForm =
     }
 
 
-    /*
-      SỐ ĐIỆN THOẠI
-    */
+    // SỐ ĐIỆN THOẠI
 
     if (
       !shipping.value.sodienthoai
@@ -938,9 +927,7 @@ const validateForm =
     }
 
 
-    /*
-      ĐỊA CHỈ
-    */
+    // ĐỊA CHỈ
 
     if (
       !shipping.value.diachi
@@ -977,53 +964,27 @@ const datHang =
   async () => {
 
 
-    /*
-      Kiểm tra đăng nhập
-    */
+    // Kiểm tra form
 
-    if (!token) {
-
-      alert(
-        "Vui lòng đăng nhập trước khi đặt hàng"
-      );
-
-      router.push("/dangnhap");
+    if (
+      !validateForm()
+    ) {
 
       return;
 
     }
 
 
-    /*
-      Kiểm tra giỏ hàng
-    */
+    // Kiểm tra giỏ hàng
 
     if (
-      !Array.isArray(cart.value.items) ||
+      !cart.value.items ||
       cart.value.items.length === 0
     ) {
 
       alert(
         "Giỏ hàng đang trống"
       );
-
-      router.push("/giohang");
-
-      return;
-
-    }
-
-
-    /*
-      Kiểm tra form
-    */
-
-    if (!validateForm()) {
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
 
       return;
 
@@ -1036,9 +997,9 @@ const datHang =
     try {
 
 
-      /*
-        Chuẩn bị sản phẩm
-      */
+      /* =========================
+         CHUẨN BỊ SẢN PHẨM
+      ========================= */
 
       const items =
         cart.value.items.map(
@@ -1048,13 +1009,7 @@ const datHang =
               item.sanpham?._id,
 
             soluong:
-              Number(
-                item.soluong
-              ),
-
-            /*
-              Lưu luôn biến thể
-            */
+              Number(item.soluong),
 
             bonho:
               item.bonho,
@@ -1066,22 +1021,93 @@ const datHang =
         );
 
 
-      /*
-        Kiểm tra sản phẩm
-      */
+      /* =========================
+         TẠO ĐƠN HÀNG
+      ========================= */
 
-      const invalidItem =
-        items.find(
-          item =>
-            !item.productId ||
-            !item.soluong
+      const res =
+        await axios.post(
+
+          "/dathang",
+
+          {
+
+            items,
+
+            shippingAddress:
+              shipping.value,
+
+            paymentMethod:
+              paymentMethod.value,
+
+            note:
+              shipping.value.ghichu,
+
+          },
+
+          {
+
+            headers: {
+
+              Authorization:
+                `Bearer ${token}`,
+
+            },
+
+          }
+
         );
 
 
-      if (invalidItem) {
+      /* =========================
+         ĐẶT HÀNG THÀNH CÔNG
+      ========================= */
 
-        alert(
-          "Có sản phẩm trong giỏ hàng không hợp lệ. Vui lòng tải lại giỏ hàng."
+      alert(
+
+        res.data?.message ||
+
+        "Đặt hàng thành công!"
+
+      );
+
+
+      const orderId =
+        res.data.order._id;
+
+
+      /* =========================
+         XÓA GIỎ HÀNG
+      ========================= */
+
+      await axios.delete(
+
+        "/cart",
+
+        {
+
+          headers: {
+
+            Authorization:
+              `Bearer ${token}`,
+
+          },
+
+        }
+
+      );
+
+
+      /* =========================
+         THANH TOÁN QR
+      ========================= */
+
+      if (
+        paymentMethod.value === "bank"
+      ) {
+
+        router.push(
+          `/ThanhToan/${orderId}`
         );
 
         return;
@@ -1089,92 +1115,9 @@ const datHang =
       }
 
 
-      /*
-        Gửi đơn hàng
-      */
-
-     const res = await axios.post(
-  "/dathang",
-  {
-    items,
-
-    shippingAddress:
-      shipping.value,
-
-    paymentMethod:
-      paymentMethod.value,
-
-    note:
-      shipping.value.ghichu,
-  },
-  {
-    headers: {
-      Authorization:
-        `Bearer ${token}`,
-    },
-  }
-);
-
-alert(res.data.message);
-
-// =============================
-// NẾU CHUYỂN KHOẢN
-// =============================
-if (
-  paymentMethod.value === "bank"
-) {
-
-  router.push(
-    `/ThanhToan/${res.data.order._id}`
-  );
-
-  return;
-}
-
-// =============================
-// NẾU COD
-// =============================
-await axios.delete(
-  "/cart",
-  {
-    headers: {
-      Authorization:
-        `Bearer ${token}`,
-    },
-  }
-);
-
-router.push(
-  "/LichSuDonHang"
-);
-      /*
-        Thông báo
-      */
-
-      alert(
-        res.data?.message ||
-        "Đặt hàng thành công!"
-      );
-
-
-      /*
-        Xóa giỏ hàng
-      */
-
-      await axios.delete(
-        "/cart",
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`
-          }
-        }
-      );
-
-
-      /*
-        Chuyển sang lịch sử đơn
-      */
+      /* =========================
+         THANH TOÁN COD
+      ========================= */
 
       router.push(
         "/LichSuDonHang"
